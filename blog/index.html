@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Writing — Ashiqur Rahman</title>
+<title>Writing - ashiqur</title>
 <meta name="description" content="All essays and notes by Ashiqur Rahman.">
 <link rel="icon" href="../favicon.svg" type="image/svg+xml">
 <script>
@@ -19,11 +19,13 @@
 
 <header class="site-header">
   <div class="header-inner">
-    <a href="../" class="wordmark">ashiqur<span>.</span></a>
+    <a href="../" class="wordmark" style="border: 1px solid var(--rule); padding: 0.2rem 0.5rem; border-radius: var(--radius); display: inline-block;">ashiqur</a>
     <nav class="site-nav">
-      <a href="../blog/" class="link-ink active">Writing</a>
-      <a href="../about/" class="link-ink">About</a>
-      <a href="../contact/" class="link-ink">Contact</a>
+      <div class="site-nav-inner">
+        <a href="../blog/" class="link-ink">Writing</a>
+        <a href="../about/" class="link-ink">About</a>
+        <a href="../contact/" class="link-ink active">Contact</a>
+      </div>
     </nav>
     <div class="header-tools">
       <button class="theme-toggle" aria-label="Toggle dark mode">
@@ -70,17 +72,32 @@
 
 <footer class="site-footer">
   <div class="container">
-    <div class="footer-inner">
-      <p class="colophon">Set in Newsreader, Work Sans &amp; IBM Plex Mono.</p>
-      <div class="footer-links">
-        <a href="mailto:hello@ashiqurrahman.com">Email</a>
-        <a href="../contact/">Contact</a>
-        <a href="#">RSS</a>
-      </div>
-      <p class="copyright">© <span id="year"></span> Ashiqur Rahman. Built slow, on purpose.</p>
-    </div>
+    <style>
+  @media (max-width: 700px) {
+    .footer-inner {
+      flex-direction: column !important;
+      justify-content: center !important;
+      text-align: center !important;
+    }
+    .footer-links {
+      justify-content: center !important;
+      width: 100% !important;
+    }
+  }
+</style>
+
+<div class="footer-inner">
+  <p class="colophon">Set in Newsreader, Work Sans &amp; IBM Plex Mono.</p>
+  <div class="footer-links">
+    <a href="mailto:email@ashiqur.in">Email</a>
+    <a href="../contact/">Contact</a>
+    <a href="https://x.com/ashiqur_sf">Twitter</a>
+  </div>
+  <p class="copyright" style="text-align: center;">© <span id="year"></span> ashiqur • Personal Blog</p>
+</div>
   </div>
 </footer>
+
 
 <script src="../script.js"></script>
 </body>
