@@ -35,10 +35,6 @@
   color-scheme: dark;
 }
 
-* {
-  -webkit-tap-highlight-color: transparent;
-}
-
 /* ---------- reset & base ---------- */
 * { box-sizing: border-box; }
 html { scroll-behavior: smooth; }
@@ -188,6 +184,15 @@ button {
   align-items: center;
   gap: var(--space-6);
 }
+.site-nav-inner {
+  /* .site-nav's own flex/gap above has nothing to act on — .site-nav-inner,
+     not the <a> tags, is its only child. This is the rule that actually
+     spaces the links at desktop widths; the mobile media query below
+     overrides it to a column for the dropdown. */
+  display: flex;
+  align-items: center;
+  gap: var(--space-6);
+}
 .site-nav a {
   font-size: .92rem;
   color: var(--ink-soft);
@@ -232,36 +237,81 @@ body.nav-open .nav-toggle span:nth-child(2) { opacity: 0; }
 body.nav-open .nav-toggle span:nth-child(3) { transform: translateY(-5px) rotate(-45deg); }
 
 @media (max-width: 700px) {
+  /* Let the nav drop to its own row below wordmark + tools, inside the
+     same header box — so growing it grows the header itself. */
+  .header-inner {
+    flex-wrap: wrap;
+    row-gap: 0; /* header-inner's flex `gap` inserts fixed space between
+       the icon row and the site-nav row regardless of the nav row's own
+       height — so even when site-nav is collapsed to 0 (closed state),
+       that gap stuck around and pushed the header's bottom border away
+       from the icon row. Zeroing it here lets the border hug the icon
+       row when closed; spacing for the open state is restored below on
+       the first nav link instead. */
+    padding-bottom: 0; /* this padding used to sit between the animating
+       site-nav row and the header's actual border — a fixed gap the whole
+       slide, so the reveal always looked like it stopped short of the
+       real edge. Moved onto .site-nav-inner below so it animates with
+       the content instead of sitting outside it. */
+  }
+
+  .wordmark { order: 1; }
+  .header-tools { order: 2; }
+
   .site-nav {
-    position: absolute;
-    top: 100%;
-    left: 0;
-    right: 0;
-    flex-direction: column;
-    align-items: flex-start;
-    gap: var(--space-4);
-    background: var(--paper);
-    padding: var(--space-5);
-    border-bottom: 1px solid var(--rule);
-    opacity: 0;
+    order: 3;
+    flex-basis: 100%;
+    align-items: start; /* the desktop rule sets align-items:center, which
+       centers the link block inside the still-growing row — so as it
+       opened, the text visibly expanded outward from the middle instead
+       of staying put. Pinning it to the top keeps the text fixed and lets
+       only the row height (the reveal) animate. */
+    min-height: 0; /* lets this flex row shrink all the way to 0 */
+
+    /* The grow: row track expands/collapses to exact content height,
+       pushing the header's own bottom border down with it. */
+    display: grid;
+    grid-template-rows: 0fr;
+    overflow: hidden;
+    transition: grid-template-rows 0.35s linear, visibility 0s linear 0.35s;
+    /* grid-template-rows: linear reveal (see note above on the old
+       ease-out curve). visibility: this 0.35s delay is what makes CLOSE
+       smooth — the links stay visible and shrink away with the row, only
+       flipping to hidden once the collapse finishes, instead of vanishing
+       the instant you tap the icon. The .nav-open rule below zeroes the
+       delay so OPEN still shows the links immediately. */
+
     visibility: hidden;
-    pointer-events: none;
-    transform: translateY(-8px);
-    transition:
-      opacity 0.3s cubic-bezier(0.16, 1, 0.3, 1),
-      transform 0.3s cubic-bezier(0.16, 1, 0.3, 1),
-      visibility 0s 0.3s;
   }
 
   body.nav-open .site-nav {
-    opacity: 1;
+    grid-template-rows: 1fr;
     visibility: visible;
-    pointer-events: auto;
-    transform: translateY(0);
-    transition:
-      opacity 0.3s cubic-bezier(0.16, 1, 0.3, 1),
-      transform 0.3s cubic-bezier(0.16, 1, 0.3, 1),
-      visibility 0s 0s;
+    transition: grid-template-rows 0.35s linear, visibility 0s linear 0s;
+  }
+
+  .site-nav-inner {
+    /* required for the grid trick — lets the row shrink below content size */
+    min-height: 0;
+    overflow: hidden;
+
+    display: flex;
+    flex-direction: column;
+    align-items: flex-start;
+    gap: var(--space-4);
+    padding-bottom: var(--space-4); /* the breathing room below "Contact",
+       now part of the content that animates — matches the padding-bottom
+       removed from .header-inner above, so the final open state looks the
+       same, but the reveal edge now tracks the header's real border the
+       whole way through the slide instead of stopping short of it. */
+  }
+
+  /* space between the top row and the links once open — this lives on
+     the link itself, not on .site-nav-inner: padding on the collapsing
+     box itself can't shrink to 0 the way content can, so it would have
+     kept the header a bit taller even when the menu is closed */
+  .site-nav-inner a:first-child {
+    margin-top: var(--space-4);
   }
 
   .nav-toggle {
@@ -366,13 +416,15 @@ section.block + section.block { border-top: 1px solid var(--rule); }
 }
 .year-label:first-child { margin-top: 0; }
 
-/* ---------- fade-up on scroll ---------- */
+/* ---------- fade-up on scroll (Animation Removed) ---------- */
 .fade-up {
-  opacity: 0;
-  transform: translateY(14px);
-  transition: opacity .6s ease, transform .6s ease;
+  opacity: 1;
+  transform: none;
 }
-.fade-up.is-visible { opacity: 1; transform: translateY(0); }
+.fade-up.is-visible { 
+  opacity: 1; 
+  transform: none; 
+}
 
 /* ---------- about page ---------- */
 .about-hero { padding: var(--space-8) 0 var(--space-7); }
