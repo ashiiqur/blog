@@ -3,8 +3,8 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>About — Ashiqur Rahman</title>
-<meta name="description" content="A little about Ashiqur Rahman — who writes here, and why.">
+<title>About - ashiqur</title>
+<meta name="description" content="A little about Ashiqur Rahman - who writes here, and why.">
 <link rel="icon" href="../favicon.svg" type="image/svg+xml">
 <script>
 (function(){try{var t=localStorage.getItem('theme');if(!t){t=window.matchMedia('(prefers-color-scheme: dark)').matches?'dark':'light';}document.documentElement.setAttribute('data-theme',t);}catch(e){}})();
@@ -19,11 +19,13 @@
 
 <header class="site-header">
   <div class="header-inner">
-    <a href="../" class="wordmark">ashiqur<span>.</span></a>
+    <a href="../" class="wordmark" style="border: 1px solid var(--rule); padding: 0.2rem 0.5rem; border-radius: var(--radius); display: inline-block;">ashiqur</a>
     <nav class="site-nav">
-      <a href="../blog/" class="link-ink">Writing</a>
-      <a href="../about/" class="link-ink active">About</a>
-      <a href="../contact/" class="link-ink">Contact</a>
+      <div class="site-nav-inner">
+        <a href="../blog/" class="link-ink">Writing</a>
+        <a href="../about/" class="link-ink">About</a>
+        <a href="../contact/" class="link-ink active">Contact</a>
+      </div>
     </nav>
     <div class="header-tools">
       <button class="theme-toggle" aria-label="Toggle dark mode">
@@ -44,9 +46,9 @@
     </section>
 
     <section class="block about-body measure">
-      <p>Most people online know me as <strong>ashiqur</strong>. My full name is <strong>Ashiqur Rahman</strong>, and this is my personal corner of the internet — a place to think slowly, in public, without a feed pushing back.</p>
-      <p>I'm interested in the space between doing and overdoing: how much of what we call "productive" is really just noise dressed up as effort. Most of what I write here starts as a note to myself and ends up being for whoever needs to hear it too.</p>
-      <p>I keep the site itself the way I try to keep my days — a little quiet, a little deliberate, nothing on the page that isn't earning its place.</p>
+      <p>Most people online know me as <strong>ashiqur</strong>. My full name is <strong>Ashiqur Rahman</strong>, and this is my personal corner of the internet - a place to share something about me and some of my works.</p>
+      <p>I'm interested in outer space, riding, talking with peoples, studying, being introvert, researching, reading books, producing musics, teaching<strong>?</strong> Actually I don't know.</p>
+      <p>I keep the site itself the way I try to keep my days - a little quiet, a little nostalgic.</p>
     </section>
 
     <section class="block">
@@ -56,11 +58,11 @@
       <ul class="now-list">
         <li class="fade-up">
           <span class="now-label">Reading</span>
-          <span class="now-value">One long book at a time, slower than I'd like to admit.</span>
+          <span class="now-value">The Feynman Lectures on Physics.</span>
         </li>
         <li class="fade-up">
           <span class="now-label">Writing</span>
-          <span class="now-value">A short essay every few weeks — no schedule, no pressure.</span>
+          <span class="now-value">Nothing right now.</span>
         </li>
         <li class="fade-up">
           <span class="now-label">Working on</span>
@@ -68,7 +70,7 @@
         </li>
         <li class="fade-up">
           <span class="now-label">Based in</span>
-          <span class="now-value">Wherever the next paragraph gets written.</span>
+          <span class="now-value">Wherever life is.</span>
         </li>
       </ul>
     </section>
@@ -81,7 +83,7 @@
         This site is set in three typefaces used on purpose rather than by default:
         <strong style="color:var(--ink); font-weight:500;">Newsreader</strong> for headings and titles,
         <strong style="color:var(--ink); font-weight:500;">Work Sans</strong> for the paragraphs you're reading now, and
-        <strong style="color:var(--ink); font-weight:500;">IBM Plex Mono</strong> for dates, tags, and the small print. No frameworks, no tracking, no cookie banner — just HTML and CSS, built to load fast and stay out of your way.
+        <strong style="color:var(--ink); font-weight:500;">IBM Plex Mono</strong> for dates, tags, and the small print. No frameworks, no tracking, no cookie banner - just HTML and CSS, built to load fast and stay out of your way.
       </p>
       <a href="../contact/" class="back-link">
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M19 12H5M11 18l-6-6 6-6"/></svg>
@@ -94,15 +96,29 @@
 
 <footer class="site-footer">
   <div class="container">
-    <div class="footer-inner">
-      <p class="colophon">Set in Newsreader, Work Sans &amp; IBM Plex Mono.</p>
-      <div class="footer-links">
-        <a href="mailto:hello@ashiqurrahman.com">Email</a>
-        <a href="../contact/">Contact</a>
-        <a href="#">RSS</a>
-      </div>
-      <p class="copyright">© <span id="year"></span> Ashiqur Rahman. Built slow, on purpose.</p>
-    </div>
+    <style>
+  @media (max-width: 700px) {
+    .footer-inner {
+      flex-direction: column !important;
+      justify-content: center !important;
+      text-align: center !important;
+    }
+    .footer-links {
+      justify-content: center !important;
+      width: 100% !important;
+    }
+  }
+</style>
+
+<div class="footer-inner">
+  <p class="colophon">Set in Newsreader, Work Sans &amp; IBM Plex Mono.</p>
+  <div class="footer-links">
+    <a href="mailto:email@ashiqur.in">Email</a>
+    <a href="../contact/">Contact</a>
+    <a href="https://x.com/ashiqur_sf">Twitter</a>
+  </div>
+  <p class="copyright" style="text-align: center;">© <span id="year"></span> ashiqur • Personal Blog</p>
+</div>
   </div>
 </footer>
 
