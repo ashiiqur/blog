@@ -230,37 +230,45 @@ body.nav-open .nav-toggle span:nth-child(3) { transform: translateY(-5px) rotate
 @media (max-width: 700px) {
   .site-nav {
     position: absolute;
-    top: 100%; 
-    left: 0; 
+    top: 100%;
+    left: 0;
     right: 0;
     flex-direction: column;
     align-items: flex-start;
     gap: var(--space-4);
     background: var(--paper);
-    max-height: 0;
-    padding: 0 var(--space-5);
-    border-bottom: 0px solid var(--rule);
-    opacity: 0;
-    visibility: hidden;
-    overflow: hidden;
-    transition: all 0.3s ease;
-  }
-  body.nav-open .site-nav {
-    max-height: 350px;
     padding: var(--space-5);
     border-bottom: 1px solid var(--rule);
+    opacity: 0;
+    visibility: hidden;
+    pointer-events: none;
+    transform: translateY(-8px);
+    transition:
+      opacity 0.3s cubic-bezier(0.16, 1, 0.3, 1),
+      transform 0.3s cubic-bezier(0.16, 1, 0.3, 1),
+      visibility 0s 0.3s;
+  }
+
+  body.nav-open .site-nav {
     opacity: 1;
     visibility: visible;
+    pointer-events: auto;
+    transform: translateY(0);
+    transition:
+      opacity 0.3s cubic-bezier(0.16, 1, 0.3, 1),
+      transform 0.3s cubic-bezier(0.16, 1, 0.3, 1),
+      visibility 0s 0s;
   }
-  
-  .nav-toggle { 
-    display: flex; 
+
+  .nav-toggle {
+    display: flex;
   }
+
   .hero,
   .contact-hero,
   .about-hero,
   .post-head {
-    padding-top: var(--space-4) !important; 
+    padding-top: var(--space-4) !important;
     margin-top: 0 !important;
   }
 }
@@ -574,3 +582,25 @@ section.block + section.block { border-top: 1px solid var(--rule); }
 }
 .back-link svg { width: 12px; height: 12px; }
 .back-link:hover { color: var(--accent); }
+
+
+@media (max-width: 700px) {
+  
+  .about-hero {
+    padding-bottom: var(--space-4) !important; 
+  }
+
+  /* Reduces the 5rem top padding for the text block */
+  section.block.about-body {
+    padding-top: var(--space-2) !important; 
+  }
+  
+  .contact-hero {
+    padding-bottom: var(--space-4) !important; 
+  }
+
+  /* Reduces the space between the intro text and the social links */
+  .contact-grid {
+    gap: var(--space-4) !important; 
+  }
+}
