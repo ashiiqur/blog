@@ -653,6 +653,31 @@ function lazyLoadBackgrounds(elements, options) {
   var currentIndex = -1;
   var lastFocused = null;
 
+  /* auto-hide close/prev/next — visible right after opening or stepping
+     to another item, then fades out; any tap or mouse movement over the
+     popup brings them back and restarts the timer. This never touches
+     video playback — it only toggles a class, so a playing video keeps
+     playing regardless of whether these controls are shown or hidden.
+     The CSS that actually hides them only applies under the mobile
+     (max-width: 640px) breakpoint, so on desktop this class has no
+     visible effect and the controls stay on exactly as before. */
+  var CONTROLS_HIDE_DELAY = 2500;
+  var controlsHideTimer = null;
+
+  function showControls() {
+    if (!modal) return;
+    modal.classList.add("controls-visible");
+    clearTimeout(controlsHideTimer);
+    controlsHideTimer = setTimeout(function () {
+      modal.classList.remove("controls-visible");
+    }, CONTROLS_HIDE_DELAY);
+  }
+
+  function stopControlsAutoHide() {
+    clearTimeout(controlsHideTimer);
+    controlsHideTimer = null;
+  }
+
   function svg(pathMarkup, extraClass) {
     return '<svg class="' + (extraClass || "") + '" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7">' + pathMarkup + "</svg>";
   }
@@ -705,6 +730,13 @@ function lazyLoadBackgrounds(elements, options) {
       else if (e.key === "ArrowRight") { step(1); }
       else if (e.key === "Tab") { trapFocus(e); }
     });
+
+    /* tap (touch) or mouse movement anywhere over the popup reveals the
+       controls; passive listeners only, so this never blocks or delays
+       any other click/tap already handled elsewhere (zoom, video's own
+       controls, close/backdrop/prev/next). */
+    modal.addEventListener("pointerdown", showControls);
+    modal.addEventListener("pointermove", showControls);
   }
 
   function trapFocus(e) {
@@ -768,6 +800,7 @@ function lazyLoadBackgrounds(elements, options) {
     if (!list.length) return;
     index = (index + list.length) % list.length;
     currentIndex = index;
+    showControls();
     var tile = list[index];
 
     var type = tile.getAttribute("data-type") || "file";
@@ -968,6 +1001,7 @@ function lazyLoadBackgrounds(elements, options) {
   function closeViewer(opts) {
     opts = opts || {};
     if (!modal || modal.hidden) return;
+    stopControlsAutoHide();
     modal.classList.remove("is-open");
     document.body.classList.remove("viewer-open");
     var playingVideo = stage.querySelector("video");
