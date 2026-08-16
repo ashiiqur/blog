@@ -653,20 +653,6 @@ function lazyLoadBackgrounds(elements, options) {
   var currentIndex = -1;
   var lastFocused = null;
 
-  /* Video is fetched with cache:"no-store" and played from an in-memory
-     Blob URL (see the "video" branch in render()) instead of pointing
-     <video> straight at the file — that keeps the browser from writing
-     it into its persistent HTTP cache, which is what was piling up as
-     on-device storage. activeVideoUrl tracks that Blob URL so it can be
-     released the instant the viewer steps to another tile or closes. */
-  var activeVideoUrl = null;
-  function releaseActiveVideo() {
-    if (activeVideoUrl) {
-      URL.revokeObjectURL(activeVideoUrl);
-      activeVideoUrl = null;
-    }
-  }
-
   function svg(pathMarkup, extraClass) {
     return '<svg class="' + (extraClass || "") + '" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7">' + pathMarkup + "</svg>";
   }
@@ -796,7 +782,6 @@ function lazyLoadBackgrounds(elements, options) {
 
     var playingVideo = stage.querySelector("video");
     if (playingVideo) playingVideo.pause();
-    releaseActiveVideo();
     stage.innerHTML = "";
     toolbar.innerHTML = "";
 
@@ -918,24 +903,8 @@ function lazyLoadBackgrounds(elements, options) {
         videoEl.controls = true;
         videoEl.playsInline = true;
         if (img) videoEl.poster = img;
+        videoEl.src = src;
         stage.appendChild(videoEl);
-
-        /* cache:"no-store" stops the browser writing the file into its
-           persistent HTTP cache; it's held as an in-memory Blob URL just
-           long enough to play, then released by releaseActiveVideo(). */
-        fetch(src, { cache: "no-store" })
-          .then(function (res) {
-            if (!res.ok) throw new Error("video fetch failed");
-            return res.blob();
-          })
-          .then(function (blob) {
-            if (!stage.contains(videoEl)) return; // viewer already moved on
-            activeVideoUrl = URL.createObjectURL(blob);
-            videoEl.src = activeVideoUrl;
-          })
-          .catch(function () {
-            if (stage.contains(videoEl)) stage.innerHTML = placeholderMarkup("video", tagText, img);
-          });
 
         var vdl = toolButton("download", "Download", ICONS.download);
         vdl.addEventListener("click", function () { doDownload(src, titleText); });
@@ -1003,7 +972,6 @@ function lazyLoadBackgrounds(elements, options) {
     document.body.classList.remove("viewer-open");
     var playingVideo = stage.querySelector("video");
     if (playingVideo) playingVideo.pause();
-    releaseActiveVideo();
     setTimeout(function () { modal.hidden = true; }, 200);
     if (lastFocused && lastFocused.focus) lastFocused.focus();
 
