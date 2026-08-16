@@ -37,6 +37,10 @@
   color-scheme: dark;
 }
 
+* {
+  -webkit-tap-highlight-color: transparent;
+}
+
 /* ---------- reset & base ---------- */
 * { box-sizing: border-box; }
 html { scroll-behavior: smooth; }
