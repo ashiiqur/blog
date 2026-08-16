@@ -1223,6 +1223,7 @@ html[data-initial-tab="tab-works"] #panel-works { display: block; }
   display: flex;
   align-items: center;
   justify-content: center;
+  overflow: hidden;
 }
 .viewer[hidden] { display: none; }
 .viewer-backdrop {
@@ -1390,12 +1391,39 @@ html[data-initial-tab="tab-works"] #panel-works { display: block; }
 .viewer-nav[hidden] { display: none; }
 
 body.viewer-open { overflow: hidden; }
+body.viewer-open .custom-scrollbar-track { display: none !important; }
 
 @media (max-width: 640px) {
-  .viewer-panel { width: 100vw; max-height: 100vh; height: 100vh; border-radius: 0; border: none; }
-  .viewer-stage, .viewer-media--photo, .viewer-media--video { max-height: 55vh; }
+  .viewer-panel {
+    width: 100vw;
+    max-height: 100vh;
+    max-height: 100dvh;
+    height: 100vh;
+    height: 100dvh;
+    border-radius: 0;
+    border: none;
+  }
+  .viewer-stage, .viewer-media--photo, .viewer-media--video {
+    max-height: 55vh;
+    max-height: 55dvh;
+  }
   .viewer-close { top: var(--space-3); right: var(--space-3); width: 36px; height: 36px; }
-  .viewer-prev { left: var(--space-2); top: 27.5vh; width: 34px; height: 34px; }
-  .viewer-next { right: var(--space-2); top: 27.5vh; width: 34px; height: 34px; }
+  .viewer-prev { left: var(--space-2); top: 27.5vh; top: 27.5dvh; width: 34px; height: 34px; }
+  .viewer-next { right: var(--space-2); top: 27.5vh; top: 27.5dvh; width: 34px; height: 34px; }
   .viewer-footer { flex-direction: column; align-items: stretch; }
+
+  /* auto-hide: hidden by default, revealed by the "controls-visible"
+     class the popup JS toggles on tap or pointer movement (see
+     showControls() in script.js). Desktop is untouched — these rules
+     only exist inside this mobile breakpoint. */
+  .viewer-close, .viewer-nav {
+    opacity: 0;
+    pointer-events: none;
+    transition: opacity .25s ease;
+  }
+  .viewer.controls-visible .viewer-close,
+  .viewer.controls-visible .viewer-nav {
+    opacity: 1;
+    pointer-events: auto;
+  }
 }
