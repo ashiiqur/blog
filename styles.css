@@ -37,10 +37,6 @@
   color-scheme: dark;
 }
 
-* {
-  -webkit-tap-highlight-color: transparent;
-}
-
 /* ---------- reset & base ---------- */
 * { box-sizing: border-box; }
 html { scroll-behavior: smooth; }
@@ -98,6 +94,10 @@ button {
   border: none;
   cursor: pointer;
   color: inherit;
+}
+
+* {
+  -webkit-tap-highlight-color: transparent;
 }
 
 /* ---------- link styles ---------- */
@@ -384,12 +384,26 @@ section.block + section.block { border-top: 1px solid var(--rule); }
    its own thin scrollbar (the "slider") — styled to match the site rather
    than the browser default, and deliberately opted back in to a visible
    ::-webkit-scrollbar since the page-wide rule further down hides those
-   by default on fine-pointer devices. */
+   by default on fine-pointer devices.
+   No overscroll-behavior: contain here on purpose — with it set, once a
+   scroll/swipe that started inside this list reaches the list's own
+   bottom, the browser refuses to hand the rest of that same gesture to
+   the page underneath, so the page reads as "stuck" until the person
+   lifts their finger/mouse and starts a fresh scroll outside the list.
+   Leaving overscroll-behavior at its default lets that same continuous
+   gesture flow straight on into the page once the list is exhausted.
+   script.js backs this up with an explicit wheel handler, so the
+   handoff to the page is guaranteed at the scroll boundary (or
+   immediately, if the column has no overflow to scroll at all) rather
+   than depending on a given browser's default chaining.
+   The top/bottom rule is doubled to 2px (vs. the 1px hairline used
+   everywhere else) so the box reads as a closed ledger sheet - opened
+   and closed with its own line - rather than a plain hairline. */
 .ledger {
-  border-top: 1px solid var(--rule);
+  border-top: 2px solid var(--rule);
+  border-bottom: 2px solid var(--rule);
   max-height: var(--ledger-height);
   overflow-y: auto;
-  overscroll-behavior: contain;
   padding-right: var(--space-3);
   scrollbar-width: thin;                             /* Firefox */
   scrollbar-color: var(--accent-soft) transparent;    /* Firefox */
@@ -698,7 +712,28 @@ section.block + section.block { border-top: 1px solid var(--rule); }
   margin: var(--space-6) 0 0;
 }
 .back-link svg { width: 12px; height: 12px; }
-.back-link:hover { color: var(--accent); }
+.back-link:hover, .back-link:focus-visible { color: var(--accent); }
+
+/* arrow moves on hover/keyboard-focus, and gets a little forward nudge
+   on click too (mainly for touch, which has no hover state) - see the
+   ".back-link" click listener in script.js that toggles .is-clicked */
+.back-link-arrow {
+  display: inline-block;
+  transition: transform .25s ease;
+}
+.back-link:hover .back-link-arrow,
+.back-link:focus-visible .back-link-arrow {
+  transform: translateX(4px);
+}
+.back-link-arrow.is-clicked {
+  animation: back-link-nudge .45s ease;
+}
+@keyframes back-link-nudge {
+  0%   { transform: translateX(0); }
+  40%  { transform: translateX(9px); }
+  70%  { transform: translateX(3px); }
+  100% { transform: translateX(0); }
+}
 
 
 @media (max-width: 700px) {
@@ -1360,7 +1395,7 @@ body.viewer-open { overflow: hidden; }
   .viewer-panel { width: 100vw; max-height: 100vh; height: 100vh; border-radius: 0; border: none; }
   .viewer-stage, .viewer-media--photo, .viewer-media--video { max-height: 55vh; }
   .viewer-close { top: var(--space-3); right: var(--space-3); width: 36px; height: 36px; }
-  .viewer-prev { left: var(--space-2); width: 34px; height: 34px; }
-  .viewer-next { right: var(--space-2); width: 34px; height: 34px; }
+  .viewer-prev { left: var(--space-2); top: 27.5vh; width: 34px; height: 34px; }
+  .viewer-next { right: var(--space-2); top: 27.5vh; width: 34px; height: 34px; }
   .viewer-footer { flex-direction: column; align-items: stretch; }
 }
