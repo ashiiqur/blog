@@ -1,4 +1,4 @@
-// ashiqurrahman.com — shared behaviour
+// ashiqur.in - shared behaviour
 
 (function () {
   "use strict";
@@ -132,8 +132,16 @@ if (window.matchMedia('(pointer: fine)').matches) {
   let ticking = false;
   window.addEventListener('scroll', () => {
     isScrolling = true;
-    updateVisibility();
-    
+    // Just show the track here — don't call updateVisibility() (which
+    // calls updateScrollbar()) synchronously on every raw scroll event.
+    // scroll fires many times per gesture, and updateScrollbar() reads
+    // layout (scrollHeight/clientHeight/offsetHeight) then writes styles,
+    // forcing a synchronous layout each time it's called outside rAF —
+    // that's what caused the stutter. The rAF block below already
+    // recomputes position/size at most once per frame, which is the
+    // only place that needs to happen.
+    track.classList.add('is-visible');
+
     if (!ticking) {
       window.requestAnimationFrame(() => {
         updateScrollbar();
@@ -359,16 +367,22 @@ if (window.matchMedia('(pointer: fine)').matches) {
 
 /* ---------- shared lazy background-image loader ----------
    Used for both the Posts grid tiles and the Works thumbnails below.
-   Nothing is fetched until an element is about to scroll into view (or,
-   if it starts out inside a hidden tab panel, until switching to that
-   tab brings it near the viewport) — IntersectionObserver watches every
-   element up front, but each file is only requested once it's on screen
-   or close to it, so a long grid doesn't fire off dozens of requests on
-   load. Same probe-first approach as the pixel portrait and special
-   circles elsewhere on the page: try loading the file, and only touch
-   the DOM once it's confirmed to exist; a missing file (or an empty/
-   absent data-img) leaves whatever placeholder already renders in
-   place, untouched. */
+   Nothing is fetched until an element is actually inside the visible
+   viewport (or, if it starts out inside a hidden tab panel, until
+   switching to that tab brings it into view) — IntersectionObserver
+   watches every element up front, but each file is only requested once
+   it's genuinely on screen, so a long grid doesn't fire off dozens of
+   requests on load. rootMargin is deliberately "0px": no pre-fetch
+   buffer before/after the viewport edge, so scrolling never triggers a
+   batch of items that merely happen to be close to view — only what's
+   currently rendered inside the browser's actual viewport (root: null
+   already tracks that viewport's real, current size — it's recomputed
+   live as the window/device is resized, so this always reflects the
+   real browsing-device view size, not a guess). Same probe-first
+   approach as the pixel portrait and special circles elsewhere on the
+   page: try loading the file, and only touch the DOM once it's
+   confirmed to exist; a missing file (or an empty/absent data-img)
+   leaves whatever placeholder already renders in place, untouched. */
 function lazyLoadBackgrounds(elements, options) {
   options = options || {};
   var getTarget = options.getTarget || function (el) { return el; };
@@ -406,7 +420,7 @@ function lazyLoadBackgrounds(elements, options) {
         }
       });
     },
-    { rootMargin: "200px 0px", threshold: 0.01 }
+    { root: null, rootMargin: "0px", threshold: 0 }
   );
   elements.forEach(function (el) { observer.observe(el); });
 }
@@ -486,6 +500,109 @@ function lazyLoadBackgrounds(elements, options) {
   input.addEventListener("input", function () {
     var query = norm(input.value);
     columns.forEach(function (col) { filterColumn(col, query); });
+  });
+})();
+
+/* ledger scroll handoff — a .ledger column only has room for
+   --ledger-height worth of entries before it scrolls internally.
+     1. The column has no overflow to scroll at all (few entries, or
+        everything filtered down by the search box) - every wheel tick
+        should already move the page; there's nothing here to contain.
+     2. The column DOES scroll. Whether a gesture chains into the page
+        is decided ONCE, at that gesture's very first tick, from
+        whether the column is already pinned at the edge the gesture is
+        headed toward:
+          - already pinned  -> the whole gesture hands off to the page,
+            tick for tick, so scrolling with the cursor sitting over an
+            already-scrolled column feels exactly as smooth as
+            scrolling anywhere else on the page.
+          - not pinned yet  -> the gesture scrolls the column normally;
+            if it reaches the edge partway through, the rest of that
+            same gesture is absorbed there instead of spilling into the
+            page mid-read. Only a later, separate gesture (one that
+            starts once this one has stopped) gets re-evaluated.
+        Re-deciding on every tick instead of once per gesture was the
+        earlier bug: it made a continuous scroll over an already-pinned
+        column pass through only about once every GESTURE_GAP ms,
+        instead of every tick, which read as stuttering/laggy.
+   Wheel events carry no "gesture id", so a short pause is used as the
+   cutoff between gestures: ticks less than GESTURE_GAP ms apart count
+   as the same ongoing gesture, a longer pause starts a new one. This
+   is a heuristic (inertial/momentum scrolling can trail off slowly
+   enough near the very end to blur the line), but it matches the
+   intended feel closely in practice. */
+(function () {
+  "use strict";
+  var ledgers = document.querySelectorAll(".ledger");
+  if (!ledgers.length) return;
+  var GESTURE_GAP = 180; // ms of pause that counts as "this scroll motion has stopped"
+
+  ledgers.forEach(function (ledger) {
+    var lastWheelAt = 0;
+    var chainThisGesture = false; // decided once, at the start of each scroll motion
+
+    ledger.addEventListener("wheel", function (e) {
+      var scrollable = ledger.scrollHeight > ledger.clientHeight;
+      if (!scrollable) return; // nothing to scroll here - let the page take it natively
+
+      var now = Date.now();
+      var isGestureStart = now - lastWheelAt > GESTURE_GAP;
+      lastWheelAt = now;
+
+      var atTop = ledger.scrollTop <= 0;
+      var atBottom = Math.ceil(ledger.scrollTop + ledger.clientHeight) >= ledger.scrollHeight;
+      var pastEdge = (e.deltaY < 0 && atTop) || (e.deltaY > 0 && atBottom);
+
+      if (isGestureStart) {
+        // A fresh scroll motion. If it's starting out already pinned at
+        // the edge it's headed toward, there's nothing inside the column
+        // for it to scroll at all - this whole motion belongs to the page.
+        chainThisGesture = pastEdge;
+      }
+
+      if (!pastEdge) return; // still moving inside the list - normal internal scroll
+
+      if (chainThisGesture) {
+        // Already pinned at the start of this motion: don't touch it at
+        // all - no preventDefault, no manual scrollBy. overscroll-behavior
+        // is left at its default (auto), so the browser's own native
+        // chaining takes this straight to the page itself, riding the
+        // same compositor-driven momentum curve as scrolling anywhere
+        // else - constant, uninterrupted velocity, not the coarser,
+        // lower-fidelity motion you get from relaying individual wheel
+        // ticks through a manual scrollBy call.
+        return;
+      }
+
+      // This motion had room to scroll the column and only just reached
+      // the edge - stop the browser's default here. That blocks both the
+      // ledger's own rubber-band/overscroll bounce AND the native
+      // chaining that would otherwise let this same tick spill into the
+      // page, so it absorbs instead of leaking into the page mid-read.
+      e.preventDefault();
+      // A later, separate motion (one that starts once this one has
+      // stopped) gets re-evaluated from the top, and chains immediately
+      // - via native handoff, above - if it's now pinned.
+    }, { passive: false });
+  });
+})();
+
+/* back-link arrow — the hover/focus move is pure CSS (see .back-link-arrow
+   in styles.css); this just gives the arrow the same forward nudge on
+   click, mainly so touch devices (no hover state) still get the motion. */
+(function () {
+  "use strict";
+  document.querySelectorAll(".back-link").forEach(function (link) {
+    var arrow = link.querySelector(".back-link-arrow");
+    if (!arrow) return;
+    link.addEventListener("click", function () {
+      arrow.classList.remove("is-clicked");
+      void arrow.offsetWidth; // restart the animation on repeat clicks
+      arrow.classList.add("is-clicked");
+    });
+    arrow.addEventListener("animationend", function () {
+      arrow.classList.remove("is-clicked");
+    });
   });
 })();
 
@@ -821,6 +938,16 @@ function lazyLoadBackgrounds(elements, options) {
     btnNext.hidden = !multi;
   }
 
+  /* Makes the device/browser Back button close the viewer instead of
+     leaving the page. openViewer() pushes one history entry per open
+     (not per next/prev step — browsing photos inside an open viewer
+     shouldn't pile up entries); popstate below catches Back being
+     pressed while the viewer is open and closes it instead of letting
+     the navigation happen. The URL itself is left untouched (pushState
+     is called with the current href) so this can't collide with the
+     #entries/#posts/#works tab-restore hash logic elsewhere on the page. */
+  var viewerHistoryPushed = false;
+
   function openViewer(tile) {
     buildModal();
     lastFocused = document.activeElement;
@@ -831,9 +958,15 @@ function lazyLoadBackgrounds(elements, options) {
     document.body.classList.add("viewer-open");
     requestAnimationFrame(function () { modal.classList.add("is-open"); });
     btnClose.focus();
+
+    try {
+      history.pushState({ postViewer: true }, "", location.href);
+      viewerHistoryPushed = true;
+    } catch (e) {}
   }
 
-  function closeViewer() {
+  function closeViewer(opts) {
+    opts = opts || {};
     if (!modal || modal.hidden) return;
     modal.classList.remove("is-open");
     document.body.classList.remove("viewer-open");
@@ -841,7 +974,26 @@ function lazyLoadBackgrounds(elements, options) {
     if (playingVideo) playingVideo.pause();
     setTimeout(function () { modal.hidden = true; }, 200);
     if (lastFocused && lastFocused.focus) lastFocused.focus();
+
+    /* Closing via the × button, backdrop, or Escape leaves the history
+       entry openViewer() pushed still sitting there — walk it back so
+       the *next* real Back press leaves the page right away instead of
+       silently eating one press first. Skip this when we're already
+       responding to a Back press (opts.fromPopstate): that press is
+       what fired popstate in the first place, so the entry is already
+       gone — calling history.back() again here would jump back an
+       extra page on top of it. */
+    if (viewerHistoryPushed && !opts.fromPopstate) {
+      try { history.back(); } catch (e) {}
+    }
+    viewerHistoryPushed = false;
   }
+
+  window.addEventListener("popstate", function () {
+    if (modal && !modal.hidden) {
+      closeViewer({ fromPopstate: true });
+    }
+  });
 
   function step(dir) {
     render(currentIndex + dir);
