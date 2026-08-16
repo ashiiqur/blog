@@ -939,6 +939,10 @@ function lazyLoadBackgrounds(elements, options) {
         videoEl.src = src;
         stage.appendChild(videoEl);
 
+        var vop = toolButton("open", "Open original", ICONS.open);
+        vop.addEventListener("click", function () { window.open(src, "_blank", "noopener"); });
+        toolbar.appendChild(vop);
+
         var vdl = toolButton("download", "Download", ICONS.download);
         vdl.addEventListener("click", function () { doDownload(src, titleText); });
         toolbar.appendChild(vdl);
