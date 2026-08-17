@@ -1,4 +1,4 @@
-// ashiqur.in - shared behaviour
+// blog.ashiqur.in - shared behaviour
 
 (function () {
   "use strict";
@@ -1055,3 +1055,14 @@ function lazyLoadBackgrounds(elements, options) {
     });
   });
 })();
+
+/* PWA install support: registers the service worker so the browser can
+   offer "Install app" and the site keeps working offline. Feature-detected,
+   so it's a safe no-op in browsers that don't support it. */
+if ("serviceWorker" in navigator) {
+  window.addEventListener("load", function () {
+    navigator.serviceWorker.register("sw.js").catch(function (e) {
+      console.warn("[sw] registration failed:", e);
+    });
+  });
+}

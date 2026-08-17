@@ -1427,3 +1427,10 @@ body.viewer-open .custom-scrollbar-track { display: none !important; }
     pointer-events: auto;
   }
 }
+
+
+.home-link {
+  padding-left: 0 !important;
+  padding-right: 0 !important;
+  margin-right: 15px; /* Adjust this value to control the space before 'Writing' */
+}
