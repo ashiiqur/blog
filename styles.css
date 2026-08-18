@@ -41,6 +41,16 @@
 * { box-sizing: border-box; }
 html { scroll-behavior: smooth; }
 
+/* Stops the whole-page rubber-band bounce from chaining out to the
+   mobile browser's own gesture handling. Without this, overscrolling
+   past the bottom (or top) and then letting go while the page is still
+   in that bounced state can leave the browser's address bar stuck
+   mid hide/show animation until a hard flick "wakes" it back up.
+   `contain` keeps the native bounce feel at the page edges but stops
+   it from propagating any further — set on both html and body since
+   which one is the actual scroller varies by browser. */
+html, body { overscroll-behavior-y: contain; }
+
 @media (prefers-reduced-motion: reduce) {
   html { scroll-behavior: auto; }
   *, *::before, *::after {
