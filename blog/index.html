@@ -37,6 +37,40 @@
   }catch(e){}
 })();
 </script>
+<script>
+(function(){
+  /* Same pre-paint trick as the tab restore above, but for pagination:
+     without this, the full unpaginated grid paints first (every item,
+     page 1 included), and only once script.js runs near the end of the
+     body does it hide everything outside the stored page — which reads
+     as a flash/blink of page 1 before snapping to the real page. Running
+     here, before the body is even parsed, means the correct items are
+     hidden from the very first paint, so there's nothing to snap away
+     from. script.js's own pagination setup still runs as before and
+     simply confirms/continues this rather than correcting it. */
+  try{
+    var PAGE_SIZE = 20;
+    var css = '';
+    [
+      { key: 'postsPage', selector: '.posts-grid > .post-tile' },
+      { key: 'worksPage', selector: '.works-list > .work-card' },
+      { key: 'entriesPage', selector: '.ledger > .entry' }
+    ].forEach(function(cfg){
+      var stored = parseInt(localStorage.getItem(cfg.key), 10);
+      var page = stored >= 1 ? stored : 1;
+      var start = (page - 1) * PAGE_SIZE;
+      if(start > 0){
+        css += cfg.selector + ':nth-child(-n+' + start + '){display:none}';
+      }
+      css += cfg.selector + ':nth-child(n+' + (start + PAGE_SIZE + 1) + '){display:none}';
+    });
+    var style = document.createElement('style');
+    style.setAttribute('data-pagination-preload', 'true');
+    style.textContent = css;
+    document.head.appendChild(style);
+  }catch(e){}
+})();
+</script>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Newsreader:ital,opsz,wght@0,6..72,300;0,6..72,400;0,6..72,500;1,6..72,400;1,6..72,500&family=Work+Sans:wght@300;400;500;600;700&family=IBM+Plex+Mono:wght@400;500&display=swap" rel="stylesheet">
@@ -97,6 +131,14 @@
           </label>
         </div>
         <div class="ledger">
+          
+
+
+
+
+
+
+          
           <a href="on-the-discipline-of-doing-less/" class="entry fade-up">
             <span class="entry-date">2026.08.02</span>
             <span class="entry-title">On the Discipline of Doing Less</span>
@@ -152,7 +194,10 @@
              data-type value for labelling. -->
         <div class="posts-grid">
 
-          <div class="post-tile" data-type="photo" data-src="assets/posts/6.jpg" data-img="assets/posts/6.jpg">
+
+
+
+          <div class="post-tile" data-type="gif" data-src="assets/posts/gif/1.jpg" data-img="assets/posts/gif/1.jpg">
             <div class="post-media post-media--photo">
               <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6"><rect x="3" y="5" width="18" height="14" rx="2"/><circle cx="9" cy="11" r="2"/><path d="M21 16l-5.5-5-4 4L9 13l-6 6"/></svg>
             </div>
@@ -165,12 +210,12 @@
               </button>
             </div>
             <div class="post-caption">
-              <span class="post-title">Quiet morning light</span>
-              <span class="post-date">Uploaded 2026.08.10</span>
+              <span class="post-title">Something special</span>
+              <span class="post-date">Uploaded 2026.08.14</span>
             </div>
           </div>
 
-          <div class="post-tile" data-type="photo" data-src="assets/posts/5.jpg" data-img="assets/posts/5.jpg">
+          <div class="post-tile" data-type="gif" data-src="assets/posts/gif/1.jpg" data-img="assets/posts/gif/1.jpg">
             <div class="post-media post-media--photo">
               <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6"><rect x="3" y="5" width="18" height="14" rx="2"/><circle cx="9" cy="11" r="2"/><path d="M21 16l-5.5-5-4 4L9 13l-6 6"/></svg>
             </div>
@@ -183,12 +228,12 @@
               </button>
             </div>
             <div class="post-caption">
-              <span class="post-title">Quiet morning light</span>
-              <span class="post-date">Uploaded 2026.08.10</span>
+              <span class="post-title">Something special</span>
+              <span class="post-date">Uploaded 2026.08.14</span>
             </div>
           </div>
 
-          <div class="post-tile" data-type="photo" data-src="assets/posts/4.jpg" data-img="assets/posts/4.jpg">
+          <div class="post-tile" data-type="gif" data-src="assets/posts/gif/1.jpg" data-img="assets/posts/gif/1.jpg">
             <div class="post-media post-media--photo">
               <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6"><rect x="3" y="5" width="18" height="14" rx="2"/><circle cx="9" cy="11" r="2"/><path d="M21 16l-5.5-5-4 4L9 13l-6 6"/></svg>
             </div>
@@ -201,12 +246,12 @@
               </button>
             </div>
             <div class="post-caption">
-              <span class="post-title">Quiet morning light</span>
-              <span class="post-date">Uploaded 2026.08.10</span>
+              <span class="post-title">Something special</span>
+              <span class="post-date">Uploaded 2026.08.14</span>
             </div>
           </div>
 
-          <div class="post-tile" data-type="photo" data-src="assets/posts/3.jpg" data-img="assets/posts/3.jpg">
+          <div class="post-tile" data-type="gif" data-src="assets/posts/gif/1.jpg" data-img="assets/posts/gif/1.jpg">
             <div class="post-media post-media--photo">
               <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6"><rect x="3" y="5" width="18" height="14" rx="2"/><circle cx="9" cy="11" r="2"/><path d="M21 16l-5.5-5-4 4L9 13l-6 6"/></svg>
             </div>
@@ -219,12 +264,12 @@
               </button>
             </div>
             <div class="post-caption">
-              <span class="post-title">Quiet morning light</span>
-              <span class="post-date">Uploaded 2026.08.10</span>
+              <span class="post-title">Something special</span>
+              <span class="post-date">Uploaded 2026.08.14</span>
             </div>
           </div>
 
-          <div class="post-tile" data-type="photo" data-src="assets/posts/2.jpg" data-img="assets/posts/2.jpg">
+          <div class="post-tile" data-type="gif" data-src="assets/posts/gif/1.jpg" data-img="assets/posts/gif/1.jpg">
             <div class="post-media post-media--photo">
               <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6"><rect x="3" y="5" width="18" height="14" rx="2"/><circle cx="9" cy="11" r="2"/><path d="M21 16l-5.5-5-4 4L9 13l-6 6"/></svg>
             </div>
@@ -237,12 +282,12 @@
               </button>
             </div>
             <div class="post-caption">
-              <span class="post-title">Quiet morning light</span>
-              <span class="post-date">Uploaded 2026.08.10</span>
+              <span class="post-title">Something special</span>
+              <span class="post-date">Uploaded 2026.08.14</span>
             </div>
           </div>
 
-          <div class="post-tile" data-type="photo" data-src="assets/posts/1.jpg" data-img="assets/posts/1.jpg">
+          <div class="post-tile" data-type="gif" data-src="assets/posts/gif/1.jpg" data-img="assets/posts/gif/1.jpg">
             <div class="post-media post-media--photo">
               <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6"><rect x="3" y="5" width="18" height="14" rx="2"/><circle cx="9" cy="11" r="2"/><path d="M21 16l-5.5-5-4 4L9 13l-6 6"/></svg>
             </div>
@@ -255,10 +300,488 @@
               </button>
             </div>
             <div class="post-caption">
-              <span class="post-title">Quiet morning light</span>
-              <span class="post-date">Uploaded 2026.08.10</span>
+              <span class="post-title">Something special</span>
+              <span class="post-date">Uploaded 2026.08.14</span>
             </div>
           </div>
+
+          <div class="post-tile" data-type="gif" data-src="assets/posts/gif/1.jpg" data-img="assets/posts/gif/1.jpg">
+            <div class="post-media post-media--photo">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6"><rect x="3" y="5" width="18" height="14" rx="2"/><circle cx="9" cy="11" r="2"/><path d="M21 16l-5.5-5-4 4L9 13l-6 6"/></svg>
+            </div>
+            <div class="post-actions">
+              <button type="button" class="icon-btn" data-action="share" aria-label="Share">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6"><circle cx="18" cy="5" r="2.4"/><circle cx="6" cy="12" r="2.4"/><circle cx="18" cy="19" r="2.4"/><path d="M8.1 10.7l7.8-4.4M8.1 13.3l7.8 4.4"/></svg>
+              </button>
+              <button type="button" class="icon-btn" data-action="download" aria-label="Download">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6"><path d="M12 3v12M7 10l5 5 5-5"/><path d="M4 19h16"/></svg>
+              </button>
+            </div>
+            <div class="post-caption">
+              <span class="post-title">Something special</span>
+              <span class="post-date">Uploaded 2026.08.14</span>
+            </div>
+          </div>
+
+          <div class="post-tile" data-type="gif" data-src="assets/posts/gif/1.jpg" data-img="assets/posts/gif/1.jpg">
+            <div class="post-media post-media--photo">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6"><rect x="3" y="5" width="18" height="14" rx="2"/><circle cx="9" cy="11" r="2"/><path d="M21 16l-5.5-5-4 4L9 13l-6 6"/></svg>
+            </div>
+            <div class="post-actions">
+              <button type="button" class="icon-btn" data-action="share" aria-label="Share">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6"><circle cx="18" cy="5" r="2.4"/><circle cx="6" cy="12" r="2.4"/><circle cx="18" cy="19" r="2.4"/><path d="M8.1 10.7l7.8-4.4M8.1 13.3l7.8 4.4"/></svg>
+              </button>
+              <button type="button" class="icon-btn" data-action="download" aria-label="Download">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6"><path d="M12 3v12M7 10l5 5 5-5"/><path d="M4 19h16"/></svg>
+              </button>
+            </div>
+            <div class="post-caption">
+              <span class="post-title">Something special</span>
+              <span class="post-date">Uploaded 2026.08.14</span>
+            </div>
+          </div>
+
+          <div class="post-tile" data-type="gif" data-src="assets/posts/gif/1.jpg" data-img="assets/posts/gif/1.jpg">
+            <div class="post-media post-media--photo">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6"><rect x="3" y="5" width="18" height="14" rx="2"/><circle cx="9" cy="11" r="2"/><path d="M21 16l-5.5-5-4 4L9 13l-6 6"/></svg>
+            </div>
+            <div class="post-actions">
+              <button type="button" class="icon-btn" data-action="share" aria-label="Share">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6"><circle cx="18" cy="5" r="2.4"/><circle cx="6" cy="12" r="2.4"/><circle cx="18" cy="19" r="2.4"/><path d="M8.1 10.7l7.8-4.4M8.1 13.3l7.8 4.4"/></svg>
+              </button>
+              <button type="button" class="icon-btn" data-action="download" aria-label="Download">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6"><path d="M12 3v12M7 10l5 5 5-5"/><path d="M4 19h16"/></svg>
+              </button>
+            </div>
+            <div class="post-caption">
+              <span class="post-title">Something special</span>
+              <span class="post-date">Uploaded 2026.08.14</span>
+            </div>
+          </div>
+
+          <div class="post-tile" data-type="gif" data-src="assets/posts/gif/1.jpg" data-img="assets/posts/gif/1.jpg">
+            <div class="post-media post-media--photo">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6"><rect x="3" y="5" width="18" height="14" rx="2"/><circle cx="9" cy="11" r="2"/><path d="M21 16l-5.5-5-4 4L9 13l-6 6"/></svg>
+            </div>
+            <div class="post-actions">
+              <button type="button" class="icon-btn" data-action="share" aria-label="Share">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6"><circle cx="18" cy="5" r="2.4"/><circle cx="6" cy="12" r="2.4"/><circle cx="18" cy="19" r="2.4"/><path d="M8.1 10.7l7.8-4.4M8.1 13.3l7.8 4.4"/></svg>
+              </button>
+              <button type="button" class="icon-btn" data-action="download" aria-label="Download">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6"><path d="M12 3v12M7 10l5 5 5-5"/><path d="M4 19h16"/></svg>
+              </button>
+            </div>
+            <div class="post-caption">
+              <span class="post-title">Something special</span>
+              <span class="post-date">Uploaded 2026.08.14</span>
+            </div>
+          </div>
+
+          <div class="post-tile" data-type="gif" data-src="assets/posts/gif/1.jpg" data-img="assets/posts/gif/1.jpg">
+            <div class="post-media post-media--photo">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6"><rect x="3" y="5" width="18" height="14" rx="2"/><circle cx="9" cy="11" r="2"/><path d="M21 16l-5.5-5-4 4L9 13l-6 6"/></svg>
+            </div>
+            <div class="post-actions">
+              <button type="button" class="icon-btn" data-action="share" aria-label="Share">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6"><circle cx="18" cy="5" r="2.4"/><circle cx="6" cy="12" r="2.4"/><circle cx="18" cy="19" r="2.4"/><path d="M8.1 10.7l7.8-4.4M8.1 13.3l7.8 4.4"/></svg>
+              </button>
+              <button type="button" class="icon-btn" data-action="download" aria-label="Download">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6"><path d="M12 3v12M7 10l5 5 5-5"/><path d="M4 19h16"/></svg>
+              </button>
+            </div>
+            <div class="post-caption">
+              <span class="post-title">Something special</span>
+              <span class="post-date">Uploaded 2026.08.14</span>
+            </div>
+          </div>
+
+          <div class="post-tile" data-type="gif" data-src="assets/posts/gif/1.jpg" data-img="assets/posts/gif/1.jpg">
+            <div class="post-media post-media--photo">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6"><rect x="3" y="5" width="18" height="14" rx="2"/><circle cx="9" cy="11" r="2"/><path d="M21 16l-5.5-5-4 4L9 13l-6 6"/></svg>
+            </div>
+            <div class="post-actions">
+              <button type="button" class="icon-btn" data-action="share" aria-label="Share">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6"><circle cx="18" cy="5" r="2.4"/><circle cx="6" cy="12" r="2.4"/><circle cx="18" cy="19" r="2.4"/><path d="M8.1 10.7l7.8-4.4M8.1 13.3l7.8 4.4"/></svg>
+              </button>
+              <button type="button" class="icon-btn" data-action="download" aria-label="Download">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6"><path d="M12 3v12M7 10l5 5 5-5"/><path d="M4 19h16"/></svg>
+              </button>
+            </div>
+            <div class="post-caption">
+              <span class="post-title">Something special</span>
+              <span class="post-date">Uploaded 2026.08.14</span>
+            </div>
+          </div>
+
+          <div class="post-tile" data-type="gif" data-src="assets/posts/gif/1.jpg" data-img="assets/posts/gif/1.jpg">
+            <div class="post-media post-media--photo">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6"><rect x="3" y="5" width="18" height="14" rx="2"/><circle cx="9" cy="11" r="2"/><path d="M21 16l-5.5-5-4 4L9 13l-6 6"/></svg>
+            </div>
+            <div class="post-actions">
+              <button type="button" class="icon-btn" data-action="share" aria-label="Share">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6"><circle cx="18" cy="5" r="2.4"/><circle cx="6" cy="12" r="2.4"/><circle cx="18" cy="19" r="2.4"/><path d="M8.1 10.7l7.8-4.4M8.1 13.3l7.8 4.4"/></svg>
+              </button>
+              <button type="button" class="icon-btn" data-action="download" aria-label="Download">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6"><path d="M12 3v12M7 10l5 5 5-5"/><path d="M4 19h16"/></svg>
+              </button>
+            </div>
+            <div class="post-caption">
+              <span class="post-title">Something special</span>
+              <span class="post-date">Uploaded 2026.08.14</span>
+            </div>
+          </div>
+
+          <div class="post-tile" data-type="gif" data-src="assets/posts/gif/1.jpg" data-img="assets/posts/gif/1.jpg">
+            <div class="post-media post-media--photo">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6"><rect x="3" y="5" width="18" height="14" rx="2"/><circle cx="9" cy="11" r="2"/><path d="M21 16l-5.5-5-4 4L9 13l-6 6"/></svg>
+            </div>
+            <div class="post-actions">
+              <button type="button" class="icon-btn" data-action="share" aria-label="Share">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6"><circle cx="18" cy="5" r="2.4"/><circle cx="6" cy="12" r="2.4"/><circle cx="18" cy="19" r="2.4"/><path d="M8.1 10.7l7.8-4.4M8.1 13.3l7.8 4.4"/></svg>
+              </button>
+              <button type="button" class="icon-btn" data-action="download" aria-label="Download">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6"><path d="M12 3v12M7 10l5 5 5-5"/><path d="M4 19h16"/></svg>
+              </button>
+            </div>
+            <div class="post-caption">
+              <span class="post-title">Something special</span>
+              <span class="post-date">Uploaded 2026.08.14</span>
+            </div>
+          </div>
+
+          <div class="post-tile" data-type="gif" data-src="assets/posts/gif/1.jpg" data-img="assets/posts/gif/1.jpg">
+            <div class="post-media post-media--photo">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6"><rect x="3" y="5" width="18" height="14" rx="2"/><circle cx="9" cy="11" r="2"/><path d="M21 16l-5.5-5-4 4L9 13l-6 6"/></svg>
+            </div>
+            <div class="post-actions">
+              <button type="button" class="icon-btn" data-action="share" aria-label="Share">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6"><circle cx="18" cy="5" r="2.4"/><circle cx="6" cy="12" r="2.4"/><circle cx="18" cy="19" r="2.4"/><path d="M8.1 10.7l7.8-4.4M8.1 13.3l7.8 4.4"/></svg>
+              </button>
+              <button type="button" class="icon-btn" data-action="download" aria-label="Download">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6"><path d="M12 3v12M7 10l5 5 5-5"/><path d="M4 19h16"/></svg>
+              </button>
+            </div>
+            <div class="post-caption">
+              <span class="post-title">Something special</span>
+              <span class="post-date">Uploaded 2026.08.14</span>
+            </div>
+          </div>
+
+          <div class="post-tile" data-type="gif" data-src="assets/posts/gif/1.jpg" data-img="assets/posts/gif/1.jpg">
+            <div class="post-media post-media--photo">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6"><rect x="3" y="5" width="18" height="14" rx="2"/><circle cx="9" cy="11" r="2"/><path d="M21 16l-5.5-5-4 4L9 13l-6 6"/></svg>
+            </div>
+            <div class="post-actions">
+              <button type="button" class="icon-btn" data-action="share" aria-label="Share">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6"><circle cx="18" cy="5" r="2.4"/><circle cx="6" cy="12" r="2.4"/><circle cx="18" cy="19" r="2.4"/><path d="M8.1 10.7l7.8-4.4M8.1 13.3l7.8 4.4"/></svg>
+              </button>
+              <button type="button" class="icon-btn" data-action="download" aria-label="Download">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6"><path d="M12 3v12M7 10l5 5 5-5"/><path d="M4 19h16"/></svg>
+              </button>
+            </div>
+            <div class="post-caption">
+              <span class="post-title">Something special</span>
+              <span class="post-date">Uploaded 2026.08.14</span>
+            </div>
+          </div>
+
+          <div class="post-tile" data-type="gif" data-src="assets/posts/gif/1.jpg" data-img="assets/posts/gif/1.jpg">
+            <div class="post-media post-media--photo">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6"><rect x="3" y="5" width="18" height="14" rx="2"/><circle cx="9" cy="11" r="2"/><path d="M21 16l-5.5-5-4 4L9 13l-6 6"/></svg>
+            </div>
+            <div class="post-actions">
+              <button type="button" class="icon-btn" data-action="share" aria-label="Share">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6"><circle cx="18" cy="5" r="2.4"/><circle cx="6" cy="12" r="2.4"/><circle cx="18" cy="19" r="2.4"/><path d="M8.1 10.7l7.8-4.4M8.1 13.3l7.8 4.4"/></svg>
+              </button>
+              <button type="button" class="icon-btn" data-action="download" aria-label="Download">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6"><path d="M12 3v12M7 10l5 5 5-5"/><path d="M4 19h16"/></svg>
+              </button>
+            </div>
+            <div class="post-caption">
+              <span class="post-title">Something special</span>
+              <span class="post-date">Uploaded 2026.08.14</span>
+            </div>
+          </div>
+
+          <div class="post-tile" data-type="gif" data-src="assets/posts/gif/1.jpg" data-img="assets/posts/gif/1.jpg">
+            <div class="post-media post-media--photo">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6"><rect x="3" y="5" width="18" height="14" rx="2"/><circle cx="9" cy="11" r="2"/><path d="M21 16l-5.5-5-4 4L9 13l-6 6"/></svg>
+            </div>
+            <div class="post-actions">
+              <button type="button" class="icon-btn" data-action="share" aria-label="Share">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6"><circle cx="18" cy="5" r="2.4"/><circle cx="6" cy="12" r="2.4"/><circle cx="18" cy="19" r="2.4"/><path d="M8.1 10.7l7.8-4.4M8.1 13.3l7.8 4.4"/></svg>
+              </button>
+              <button type="button" class="icon-btn" data-action="download" aria-label="Download">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6"><path d="M12 3v12M7 10l5 5 5-5"/><path d="M4 19h16"/></svg>
+              </button>
+            </div>
+            <div class="post-caption">
+              <span class="post-title">Something special</span>
+              <span class="post-date">Uploaded 2026.08.14</span>
+            </div>
+          </div>
+
+          <div class="post-tile" data-type="gif" data-src="assets/posts/gif/1.jpg" data-img="assets/posts/gif/1.jpg">
+            <div class="post-media post-media--photo">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6"><rect x="3" y="5" width="18" height="14" rx="2"/><circle cx="9" cy="11" r="2"/><path d="M21 16l-5.5-5-4 4L9 13l-6 6"/></svg>
+            </div>
+            <div class="post-actions">
+              <button type="button" class="icon-btn" data-action="share" aria-label="Share">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6"><circle cx="18" cy="5" r="2.4"/><circle cx="6" cy="12" r="2.4"/><circle cx="18" cy="19" r="2.4"/><path d="M8.1 10.7l7.8-4.4M8.1 13.3l7.8 4.4"/></svg>
+              </button>
+              <button type="button" class="icon-btn" data-action="download" aria-label="Download">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6"><path d="M12 3v12M7 10l5 5 5-5"/><path d="M4 19h16"/></svg>
+              </button>
+            </div>
+            <div class="post-caption">
+              <span class="post-title">Something special</span>
+              <span class="post-date">Uploaded 2026.08.14</span>
+            </div>
+          </div>
+
+          <div class="post-tile" data-type="gif" data-src="assets/posts/gif/1.jpg" data-img="assets/posts/gif/1.jpg">
+            <div class="post-media post-media--photo">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6"><rect x="3" y="5" width="18" height="14" rx="2"/><circle cx="9" cy="11" r="2"/><path d="M21 16l-5.5-5-4 4L9 13l-6 6"/></svg>
+            </div>
+            <div class="post-actions">
+              <button type="button" class="icon-btn" data-action="share" aria-label="Share">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6"><circle cx="18" cy="5" r="2.4"/><circle cx="6" cy="12" r="2.4"/><circle cx="18" cy="19" r="2.4"/><path d="M8.1 10.7l7.8-4.4M8.1 13.3l7.8 4.4"/></svg>
+              </button>
+              <button type="button" class="icon-btn" data-action="download" aria-label="Download">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6"><path d="M12 3v12M7 10l5 5 5-5"/><path d="M4 19h16"/></svg>
+              </button>
+            </div>
+            <div class="post-caption">
+              <span class="post-title">Something special</span>
+              <span class="post-date">Uploaded 2026.08.14</span>
+            </div>
+          </div>
+
+          <div class="post-tile" data-type="gif" data-src="assets/posts/gif/1.jpg" data-img="assets/posts/gif/1.jpg">
+            <div class="post-media post-media--photo">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6"><rect x="3" y="5" width="18" height="14" rx="2"/><circle cx="9" cy="11" r="2"/><path d="M21 16l-5.5-5-4 4L9 13l-6 6"/></svg>
+            </div>
+            <div class="post-actions">
+              <button type="button" class="icon-btn" data-action="share" aria-label="Share">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6"><circle cx="18" cy="5" r="2.4"/><circle cx="6" cy="12" r="2.4"/><circle cx="18" cy="19" r="2.4"/><path d="M8.1 10.7l7.8-4.4M8.1 13.3l7.8 4.4"/></svg>
+              </button>
+              <button type="button" class="icon-btn" data-action="download" aria-label="Download">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6"><path d="M12 3v12M7 10l5 5 5-5"/><path d="M4 19h16"/></svg>
+              </button>
+            </div>
+            <div class="post-caption">
+              <span class="post-title">Something special</span>
+              <span class="post-date">Uploaded 2026.08.14</span>
+            </div>
+          </div>
+
+          <div class="post-tile" data-type="gif" data-src="assets/posts/gif/1.jpg" data-img="assets/posts/gif/1.jpg">
+            <div class="post-media post-media--photo">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6"><rect x="3" y="5" width="18" height="14" rx="2"/><circle cx="9" cy="11" r="2"/><path d="M21 16l-5.5-5-4 4L9 13l-6 6"/></svg>
+            </div>
+            <div class="post-actions">
+              <button type="button" class="icon-btn" data-action="share" aria-label="Share">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6"><circle cx="18" cy="5" r="2.4"/><circle cx="6" cy="12" r="2.4"/><circle cx="18" cy="19" r="2.4"/><path d="M8.1 10.7l7.8-4.4M8.1 13.3l7.8 4.4"/></svg>
+              </button>
+              <button type="button" class="icon-btn" data-action="download" aria-label="Download">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6"><path d="M12 3v12M7 10l5 5 5-5"/><path d="M4 19h16"/></svg>
+              </button>
+            </div>
+            <div class="post-caption">
+              <span class="post-title">Something special</span>
+              <span class="post-date">Uploaded 2026.08.14</span>
+            </div>
+          </div>
+
+          <div class="post-tile" data-type="gif" data-src="assets/posts/gif/1.jpg" data-img="assets/posts/gif/1.jpg">
+            <div class="post-media post-media--photo">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6"><rect x="3" y="5" width="18" height="14" rx="2"/><circle cx="9" cy="11" r="2"/><path d="M21 16l-5.5-5-4 4L9 13l-6 6"/></svg>
+            </div>
+            <div class="post-actions">
+              <button type="button" class="icon-btn" data-action="share" aria-label="Share">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6"><circle cx="18" cy="5" r="2.4"/><circle cx="6" cy="12" r="2.4"/><circle cx="18" cy="19" r="2.4"/><path d="M8.1 10.7l7.8-4.4M8.1 13.3l7.8 4.4"/></svg>
+              </button>
+              <button type="button" class="icon-btn" data-action="download" aria-label="Download">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6"><path d="M12 3v12M7 10l5 5 5-5"/><path d="M4 19h16"/></svg>
+              </button>
+            </div>
+            <div class="post-caption">
+              <span class="post-title">Something special</span>
+              <span class="post-date">Uploaded 2026.08.14</span>
+            </div>
+          </div>
+
+          <div class="post-tile" data-type="gif" data-src="assets/posts/gif/1.jpg" data-img="assets/posts/gif/1.jpg">
+            <div class="post-media post-media--photo">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6"><rect x="3" y="5" width="18" height="14" rx="2"/><circle cx="9" cy="11" r="2"/><path d="M21 16l-5.5-5-4 4L9 13l-6 6"/></svg>
+            </div>
+            <div class="post-actions">
+              <button type="button" class="icon-btn" data-action="share" aria-label="Share">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6"><circle cx="18" cy="5" r="2.4"/><circle cx="6" cy="12" r="2.4"/><circle cx="18" cy="19" r="2.4"/><path d="M8.1 10.7l7.8-4.4M8.1 13.3l7.8 4.4"/></svg>
+              </button>
+              <button type="button" class="icon-btn" data-action="download" aria-label="Download">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6"><path d="M12 3v12M7 10l5 5 5-5"/><path d="M4 19h16"/></svg>
+              </button>
+            </div>
+            <div class="post-caption">
+              <span class="post-title">Something special</span>
+              <span class="post-date">Uploaded 2026.08.14</span>
+            </div>
+          </div>
+
+          <div class="post-tile" data-type="gif" data-src="assets/posts/gif/1.jpg" data-img="assets/posts/gif/1.jpg">
+            <div class="post-media post-media--photo">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6"><rect x="3" y="5" width="18" height="14" rx="2"/><circle cx="9" cy="11" r="2"/><path d="M21 16l-5.5-5-4 4L9 13l-6 6"/></svg>
+            </div>
+            <div class="post-actions">
+              <button type="button" class="icon-btn" data-action="share" aria-label="Share">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6"><circle cx="18" cy="5" r="2.4"/><circle cx="6" cy="12" r="2.4"/><circle cx="18" cy="19" r="2.4"/><path d="M8.1 10.7l7.8-4.4M8.1 13.3l7.8 4.4"/></svg>
+              </button>
+              <button type="button" class="icon-btn" data-action="download" aria-label="Download">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6"><path d="M12 3v12M7 10l5 5 5-5"/><path d="M4 19h16"/></svg>
+              </button>
+            </div>
+            <div class="post-caption">
+              <span class="post-title">Something special</span>
+              <span class="post-date">Uploaded 2026.08.14</span>
+            </div>
+          </div>
+
+          <div class="post-tile" data-type="gif" data-src="assets/posts/gif/1.jpg" data-img="assets/posts/gif/1.jpg">
+            <div class="post-media post-media--photo">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6"><rect x="3" y="5" width="18" height="14" rx="2"/><circle cx="9" cy="11" r="2"/><path d="M21 16l-5.5-5-4 4L9 13l-6 6"/></svg>
+            </div>
+            <div class="post-actions">
+              <button type="button" class="icon-btn" data-action="share" aria-label="Share">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6"><circle cx="18" cy="5" r="2.4"/><circle cx="6" cy="12" r="2.4"/><circle cx="18" cy="19" r="2.4"/><path d="M8.1 10.7l7.8-4.4M8.1 13.3l7.8 4.4"/></svg>
+              </button>
+              <button type="button" class="icon-btn" data-action="download" aria-label="Download">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6"><path d="M12 3v12M7 10l5 5 5-5"/><path d="M4 19h16"/></svg>
+              </button>
+            </div>
+            <div class="post-caption">
+              <span class="post-title">Something special</span>
+              <span class="post-date">Uploaded 2026.08.14</span>
+            </div>
+          </div>
+
+          <div class="post-tile" data-type="gif" data-src="assets/posts/gif/1.jpg" data-img="assets/posts/gif/1.jpg">
+            <div class="post-media post-media--photo">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6"><rect x="3" y="5" width="18" height="14" rx="2"/><circle cx="9" cy="11" r="2"/><path d="M21 16l-5.5-5-4 4L9 13l-6 6"/></svg>
+            </div>
+            <div class="post-actions">
+              <button type="button" class="icon-btn" data-action="share" aria-label="Share">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6"><circle cx="18" cy="5" r="2.4"/><circle cx="6" cy="12" r="2.4"/><circle cx="18" cy="19" r="2.4"/><path d="M8.1 10.7l7.8-4.4M8.1 13.3l7.8 4.4"/></svg>
+              </button>
+              <button type="button" class="icon-btn" data-action="download" aria-label="Download">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6"><path d="M12 3v12M7 10l5 5 5-5"/><path d="M4 19h16"/></svg>
+              </button>
+            </div>
+            <div class="post-caption">
+              <span class="post-title">Something special</span>
+              <span class="post-date">Uploaded 2026.08.14</span>
+            </div>
+          </div>
+
+          <div class="post-tile" data-type="gif" data-src="assets/posts/gif/1.jpg" data-img="assets/posts/gif/1.jpg">
+            <div class="post-media post-media--photo">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6"><rect x="3" y="5" width="18" height="14" rx="2"/><circle cx="9" cy="11" r="2"/><path d="M21 16l-5.5-5-4 4L9 13l-6 6"/></svg>
+            </div>
+            <div class="post-actions">
+              <button type="button" class="icon-btn" data-action="share" aria-label="Share">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6"><circle cx="18" cy="5" r="2.4"/><circle cx="6" cy="12" r="2.4"/><circle cx="18" cy="19" r="2.4"/><path d="M8.1 10.7l7.8-4.4M8.1 13.3l7.8 4.4"/></svg>
+              </button>
+              <button type="button" class="icon-btn" data-action="download" aria-label="Download">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6"><path d="M12 3v12M7 10l5 5 5-5"/><path d="M4 19h16"/></svg>
+              </button>
+            </div>
+            <div class="post-caption">
+              <span class="post-title">Something special</span>
+              <span class="post-date">Uploaded 2026.08.14</span>
+            </div>
+          </div>
+
+          <div class="post-tile" data-type="gif" data-src="assets/posts/gif/1.jpg" data-img="assets/posts/gif/1.jpg">
+            <div class="post-media post-media--photo">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6"><rect x="3" y="5" width="18" height="14" rx="2"/><circle cx="9" cy="11" r="2"/><path d="M21 16l-5.5-5-4 4L9 13l-6 6"/></svg>
+            </div>
+            <div class="post-actions">
+              <button type="button" class="icon-btn" data-action="share" aria-label="Share">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6"><circle cx="18" cy="5" r="2.4"/><circle cx="6" cy="12" r="2.4"/><circle cx="18" cy="19" r="2.4"/><path d="M8.1 10.7l7.8-4.4M8.1 13.3l7.8 4.4"/></svg>
+              </button>
+              <button type="button" class="icon-btn" data-action="download" aria-label="Download">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6"><path d="M12 3v12M7 10l5 5 5-5"/><path d="M4 19h16"/></svg>
+              </button>
+            </div>
+            <div class="post-caption">
+              <span class="post-title">Something special</span>
+              <span class="post-date">Uploaded 2026.08.14</span>
+            </div>
+          </div>
+
+          <div class="post-tile" data-type="gif" data-src="assets/posts/gif/1.jpg" data-img="assets/posts/gif/1.jpg">
+            <div class="post-media post-media--photo">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6"><rect x="3" y="5" width="18" height="14" rx="2"/><circle cx="9" cy="11" r="2"/><path d="M21 16l-5.5-5-4 4L9 13l-6 6"/></svg>
+            </div>
+            <div class="post-actions">
+              <button type="button" class="icon-btn" data-action="share" aria-label="Share">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6"><circle cx="18" cy="5" r="2.4"/><circle cx="6" cy="12" r="2.4"/><circle cx="18" cy="19" r="2.4"/><path d="M8.1 10.7l7.8-4.4M8.1 13.3l7.8 4.4"/></svg>
+              </button>
+              <button type="button" class="icon-btn" data-action="download" aria-label="Download">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6"><path d="M12 3v12M7 10l5 5 5-5"/><path d="M4 19h16"/></svg>
+              </button>
+            </div>
+            <div class="post-caption">
+              <span class="post-title">Something special</span>
+              <span class="post-date">Uploaded 2026.08.14</span>
+            </div>
+          </div>
+
+          <div class="post-tile" data-type="gif" data-src="assets/posts/gif/1.jpg" data-img="assets/posts/gif/1.jpg">
+            <div class="post-media post-media--photo">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6"><rect x="3" y="5" width="18" height="14" rx="2"/><circle cx="9" cy="11" r="2"/><path d="M21 16l-5.5-5-4 4L9 13l-6 6"/></svg>
+            </div>
+            <div class="post-actions">
+              <button type="button" class="icon-btn" data-action="share" aria-label="Share">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6"><circle cx="18" cy="5" r="2.4"/><circle cx="6" cy="12" r="2.4"/><circle cx="18" cy="19" r="2.4"/><path d="M8.1 10.7l7.8-4.4M8.1 13.3l7.8 4.4"/></svg>
+              </button>
+              <button type="button" class="icon-btn" data-action="download" aria-label="Download">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6"><path d="M12 3v12M7 10l5 5 5-5"/><path d="M4 19h16"/></svg>
+              </button>
+            </div>
+            <div class="post-caption">
+              <span class="post-title">Something special</span>
+              <span class="post-date">Uploaded 2026.08.14</span>
+            </div>
+          </div>
+
+          <div class="post-tile" data-type="gif" data-src="assets/posts/gif/1.jpg" data-img="assets/posts/gif/1.jpg">
+            <div class="post-media post-media--photo">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6"><rect x="3" y="5" width="18" height="14" rx="2"/><circle cx="9" cy="11" r="2"/><path d="M21 16l-5.5-5-4 4L9 13l-6 6"/></svg>
+            </div>
+            <div class="post-actions">
+              <button type="button" class="icon-btn" data-action="share" aria-label="Share">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6"><circle cx="18" cy="5" r="2.4"/><circle cx="6" cy="12" r="2.4"/><circle cx="18" cy="19" r="2.4"/><path d="M8.1 10.7l7.8-4.4M8.1 13.3l7.8 4.4"/></svg>
+              </button>
+              <button type="button" class="icon-btn" data-action="download" aria-label="Download">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6"><path d="M12 3v12M7 10l5 5 5-5"/><path d="M4 19h16"/></svg>
+              </button>
+            </div>
+            <div class="post-caption">
+              <span class="post-title">Something special</span>
+              <span class="post-date">Uploaded 2026.08.14</span>
+            </div>
+          </div>
+
+          
+
+
+
+
+
+
+
+
 
           <div class="post-tile" data-type="gif" data-src="assets/posts/gif/ashiqur.gif" data-img="assets/posts/gif/ashiqur.gif">
             <div class="post-media post-media--photo">
@@ -410,12 +933,21 @@
 
           <!-- Each work-thumb below can carry data-img, e.g.
                data-img="assests/works/fieldnotes-specimen.jpg" — same
-               lazy, probe-first loading as the Posts tab: script.js only
-               requests the file once the card scrolls near the viewport,
-               and only swaps it in (fading the placeholder icon out) once
-               it's confirmed to exist. Missing file → the placeholder svg
-               stays exactly as it renders now. Rename the filename in
-               data-img to match whatever you actually upload per work. -->
+               probe-first loading as the Posts tab: script.js requests the
+               file right away and only swaps it in (fading the placeholder
+               icon out) once it's confirmed to exist. Missing file → the
+               placeholder svg stays exactly as it renders now. Rename the
+               filename in data-img to match whatever you actually upload
+               per work. -->
+
+
+
+
+
+
+
+
+
 
           <article class="work-card">
             <div class="work-thumb" data-img="assets/works/qr-generator.png">
@@ -438,6 +970,8 @@
               </div>
             </div>
           </article>
+
+          
 
           <article class="work-card">
             <div class="work-thumb" data-img="assets/works/wayfinding-paper-mill.jpg">
@@ -647,14 +1181,24 @@
   });
 
   // Per-tab search: filters the items named in each input's data-target selector.
+  // Where that list has pagination (script.js, once it exceeds 20 items),
+  // typing hands display control to the search filter below and hides the
+  // page controls; clearing the box hands it back to the current page.
   document.querySelectorAll('.search-input').forEach(function(input){
     var items = Array.prototype.slice.call(document.querySelectorAll(input.getAttribute('data-target')));
     var empty = input.closest('.tab-panel').querySelector('.empty-state');
+    var pager = items.length && items[0].parentElement && items[0].parentElement.__pagination;
     input.addEventListener('input', function(){
       var q = input.value.trim().toLowerCase();
+      if(!q){
+        if(empty){ empty.style.display = 'none'; }
+        if(pager){ pager.setSearching(false); } else { items.forEach(function(item){ item.style.display = ''; }); }
+        return;
+      }
+      if(pager){ pager.setSearching(true); }
       var visibleCount = 0;
       items.forEach(function(item){
-        var match = !q || item.textContent.toLowerCase().indexOf(q) !== -1;
+        var match = item.textContent.toLowerCase().indexOf(q) !== -1;
         item.style.display = match ? '' : 'none';
         if(match){ visibleCount++; }
       });
