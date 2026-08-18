@@ -36,9 +36,9 @@ const TARGETS = [
   { file: "404", page: "404" },
 
   // individual posts - one entry per folder inside blog/O
-  { file: "blog-a-note-on-books", eyebrow: "WRITING", title: "A Note on Books", desc: "A Note on something called book.", link: "blog.ashiqur.in/blog/a-note-on-books" },
-  { file: "blog-finding-focus-through-sound", eyebrow: "WRITING", title: "Finding Focus Through Sound", desc: "Making a sound Nostalgic.", link: "blog.ashiqur.in/blog/finding-focus-through-sound" },
-  { file: "blog-on-the-discipline-of-doing-less", eyebrow: "WRITING", title: "On the Discipline of Doing Less", desc: "Doing less doesn't mean doing nothing.", link: "blog.ashiqur.in/blog/on-the-discipline-of-doing-less" },
+  { file: "blog-a-note-on-books", eyebrow: "ENTRIES", title: "A Note on Books", desc: "A Note on something called book.", link: "blog.ashiqur.in/blog/a-note-on-books" },
+  { file: "blog-finding-focus-through-sound", eyebrow: "ENTRIES", title: "Finding Focus Through Sound", desc: "Making a sound Nostalgic.", link: "blog.ashiqur.in/blog/finding-focus-through-sound" },
+  { file: "blog-on-the-discipline-of-doing-less", eyebrow: "ENTRIES", title: "On the Discipline of Doing Less", desc: "Doing less doesn't mean doing nothing.", link: "blog.ashiqur.in/blog/on-the-discipline-of-doing-less" },
 
   // two more folders were visible in your screenshot but covered/illegible -
   // send me those slugs and I'll add matching entries the same way.
