@@ -69,6 +69,221 @@
   }
 })();
 
+/* ---------- entry download: PDF / Markdown ----------
+   Post pages only (detected by .post-body — nothing to touch on the
+   Writing grid, About, or Contact). Injects a small action row right
+   after the article body (before .post-nav, right-aligned to match
+   it) with two round buttons. Each shows a file icon with a small
+   download-arrow badge on it (see buildFileIcon() below) rather than
+   text — the format itself is exposed via aria-label/title so it's
+   still announced to screen readers and shows as a tooltip on hover:
+     - PDF calls the browser's own window.print(), which the @media
+       print rules in styles.css turn into a clean, chrome-free
+       article — any image in the post body prints exactly as it
+       renders on the page, since it's the same DOM. The reader picks
+       "Save as PDF" as the print destination. No external library.
+     - Markdown walks the article's own DOM (title, dek, meta, tags,
+       then every top-level .post-body child) and downloads a plain
+       .md file of the same content — images included as standard
+       ![alt](src) links, so anything the post embeds travels with
+       the text.
+   Purely additive: if a post has no images, the images simply don't
+   appear in either export — nothing to configure per post. */
+(function () {
+  "use strict";
+  var body = document.querySelector(".post-body");
+  if (!body) return;
+
+  /* file icon (folded-corner document — same shape used for the "file"
+     placeholder elsewhere on the site) with a small filled badge in the
+     corner carrying the download arrow, so each button reads as "this
+     file, downloadable" at a glance rather than a bare arrow. The badge
+     is knocked out against --paper first so it stays crisp over the
+     file icon's own lines regardless of theme. */
+  function buildFileIcon() {
+    return '<svg viewBox="0 0 24 24">' +
+      '<path d="M6 3h8l5 5v13a1 1 0 0 1-1 1H6a1 1 0 0 1-1-1V4a1 1 0 0 1 1-1Z" fill="none" stroke="currentColor" stroke-width="1.6"/>' +
+      '<path d="M14 3v5h5" fill="none" stroke="currentColor" stroke-width="1.6"/>' +
+      '<circle cx="17.5" cy="17.5" r="6" fill="var(--paper)"/>' +
+      '<circle cx="17.5" cy="17.5" r="5" fill="var(--accent)"/>' +
+      '<path d="M17.5 15.2v4.5M15.7 18l1.8 1.8 1.8-1.8" fill="none" stroke="var(--paper)" stroke-width="1.3" stroke-linecap="round" stroke-linejoin="round"/>' +
+      "</svg>";
+  }
+
+  /* "the page name" for downloaded files = the post's own <h1>, not the
+     URL slug — so a file saves as "A Note on Books.md" rather than
+     "a-note-on-books.md". Falls back to <title> (stripped of the
+     " - ashiqur" suffix) if a post is ever missing its title element. */
+  function pageName() {
+    var titleEl = document.querySelector(".post-title");
+    var name = titleEl ? titleEl.textContent : document.title.split(" - ")[0];
+    return name.trim();
+  }
+
+  /* strip characters filesystems reject and collapse whitespace, so the
+     visible page name is safe to hand straight to a.download / document.title */
+  function safeFileName(name) {
+    return name.replace(/[\\/:*?"<>|]+/g, "").replace(/\s+/g, " ").trim();
+  }
+
+  /* inline (within a paragraph/heading/list item/etc.) DOM -> markdown */
+  function inlineMd(node) {
+    var out = "";
+    node.childNodes.forEach(function (child) {
+      if (child.nodeType === Node.TEXT_NODE) {
+        out += child.textContent;
+        return;
+      }
+      if (child.nodeType !== Node.ELEMENT_NODE) return;
+      var tag = child.tagName.toLowerCase();
+      var inner = inlineMd(child);
+      if (tag === "strong" || tag === "b") out += "**" + inner + "**";
+      else if (tag === "em" || tag === "i") out += "*" + inner + "*";
+      else if (tag === "code") out += "`" + inner + "`";
+      else if (tag === "a") out += "[" + inner + "](" + child.href + ")";
+      else if (tag === "img") out += "![" + (child.getAttribute("alt") || "") + "](" + child.src + ")";
+      else if (tag === "br") out += "\n";
+      else out += inner;
+    });
+    return out;
+  }
+
+  /* top-level .post-body children -> markdown blocks */
+  function blockMd(el) {
+    var tag = el.tagName.toLowerCase();
+    if (/^h[1-6]$/.test(tag)) {
+      return "#".repeat(parseInt(tag[1], 10)) + " " + inlineMd(el).trim();
+    }
+    if (tag === "blockquote") {
+      return inlineMd(el).trim().split("\n").map(function (l) { return "> " + l; }).join("\n");
+    }
+    if (tag === "ul" || tag === "ol") {
+      var lines = [];
+      el.querySelectorAll(":scope > li").forEach(function (li, i) {
+        lines.push((tag === "ol" ? i + 1 + "." : "-") + " " + inlineMd(li).trim());
+      });
+      return lines.join("\n");
+    }
+    if (tag === "figure") {
+      var img = el.querySelector("img");
+      var cap = el.querySelector("figcaption");
+      var line = img ? "![" + (img.getAttribute("alt") || "") + "](" + img.src + ")" : "";
+      if (cap) line += "\n*" + inlineMd(cap).trim() + "*";
+      return line;
+    }
+    if (tag === "img") return "![" + (el.getAttribute("alt") || "") + "](" + el.src + ")";
+    if (tag === "pre") return "```\n" + el.textContent + "\n```";
+    if (tag === "hr") return "---";
+    return inlineMd(el).trim();
+  }
+
+  function buildMarkdown() {
+    var title = (document.querySelector(".post-title") || {}).textContent || document.title;
+    var dek = (document.querySelector(".post-dek") || {}).textContent || "";
+    var metaSpans = Array.prototype.map.call(
+      document.querySelectorAll(".post-meta span"),
+      function (s) { return s.textContent.trim(); }
+    ).filter(function (m) { return m && m !== "·"; });
+    var tags = Array.prototype.map.call(
+      document.querySelectorAll(".post-tags .tag"),
+      function (t) { return t.textContent.trim(); }
+    );
+
+    var lines = ["# " + title.trim()];
+    if (dek.trim()) lines.push("*" + dek.trim() + "*");
+    var metaLine = metaSpans.join(" · ");
+    if (metaLine) lines.push(metaLine + (tags.length ? "  \nTags: " + tags.join(", ") : ""));
+    lines.push("Source: " + location.href);
+    lines.push("---");
+
+    Array.prototype.forEach.call(body.children, function (el) {
+      var md = blockMd(el);
+      if (md) lines.push(md);
+    });
+
+    return lines.join("\n\n") + "\n";
+  }
+
+  function downloadMarkdown(btn) {
+    if (btn) btn.setAttribute("data-busy", "true");
+    try {
+      var md = buildMarkdown();
+      var blob = new Blob([md], { type: "text/markdown;charset=utf-8" });
+      var url = URL.createObjectURL(blob);
+      var a = document.createElement("a");
+      a.href = url;
+      a.download = safeFileName(pageName()) + ".md";
+      document.body.appendChild(a);
+      a.click();
+      a.remove();
+      setTimeout(function () { URL.revokeObjectURL(url); }, 1000);
+    } finally {
+      if (btn) btn.removeAttribute("data-busy");
+    }
+  }
+
+  /* button + small format caption underneath it (e.g. "PDF", "MD") so the
+     format is legible at a glance, not just exposed via aria-label/title. */
+  function downloadItem(label, formatLabel) {
+    var item = document.createElement("div");
+    item.className = "entry-download-item";
+
+    var b = document.createElement("button");
+    b.type = "button";
+    b.className = "entry-download-btn";
+    b.setAttribute("aria-label", label);
+    b.setAttribute("title", label);
+    b.innerHTML = buildFileIcon();
+
+    var cap = document.createElement("span");
+    cap.className = "entry-download-format";
+    cap.textContent = formatLabel;
+
+    item.appendChild(b);
+    item.appendChild(cap);
+    return { item: item, btn: b };
+  }
+
+  /* window.print() has no direct "filename" argument, but browsers seed
+     the Save-as-PDF dialog's suggested filename from document.title at
+     the moment print() is called — so swap in the page name for that
+     moment, then restore the real <title> once the dialog closes. */
+  function printAsPdf() {
+    var original = document.title;
+    document.title = safeFileName(pageName());
+    var restore = function () {
+      document.title = original;
+      window.removeEventListener("afterprint", restore);
+    };
+    window.addEventListener("afterprint", restore);
+    setTimeout(restore, 5000); // fallback for browsers that skip afterprint
+    window.print();
+  }
+
+  var wrap = document.createElement("div");
+  wrap.className = "post-downloads";
+
+  var pdf = downloadItem("Download PDF", "PDF");
+  pdf.btn.addEventListener("click", printAsPdf);
+
+  var md = downloadItem("Download Markdown", "MD");
+  md.btn.addEventListener("click", function () { downloadMarkdown(md.btn); });
+
+  wrap.appendChild(pdf.item);
+  wrap.appendChild(md.item);
+
+  /* placed after the body, before .post-nav, so it reads as a small
+     closing action row right-aligned to match the nav row beneath it —
+     not tucked up under the tags. Falls back to right after the body
+     if a post page ever has no .post-nav (e.g. no prev/next to link). */
+  var postNav = document.querySelector(".post-nav");
+  if (postNav && postNav.parentNode) {
+    postNav.parentNode.insertBefore(wrap, postNav);
+  } else {
+    body.insertAdjacentElement("afterend", wrap);
+  }
+})();
+
 
 if (window.matchMedia('(pointer: fine)').matches) {
 
