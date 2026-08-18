@@ -183,16 +183,24 @@ button {
   border-bottom: 1px solid var(--rule);
 }
 @media (pointer: coarse) {
-  /* backdrop-filter on a sticky header flush against the top edge fights
-     with the mobile browser's own dynamic toolbar (address bar) show/hide
-     animation — the blur forces this header onto its own GPU filter
-     layer, and that layer's repaint falls out of sync with the toolbar's
-     animation at the scroll extremes (on load, and at the top/bottom
-     edges), leaving the toolbar visually torn/frozen mid-transition until
-     a hard scroll forces a resync. Touch devices are exactly where that
-     toolbar exists, so drop the blur there and lean on a more opaque
-     solid tint instead — reads almost identically, without the glitch. */
+  /* Dropping the blur alone (see below) wasn't enough — the real trigger
+     is `position: sticky` itself. A sticky element pinned to the top
+     edge has to be repositioned by the browser on every single frame of
+     its own dynamic-toolbar animation (collapsing on scroll-down,
+     expanding on scroll-up or at the bottom rubber-band). That per-frame
+     recompute is what falls out of sync and leaves the toolbar visually
+     torn/frozen at the scroll extremes until a hard scroll forces a
+     resync. There's no way to keep an element pinned to the viewport
+     edge on a touch device without tying it to that animation, so the
+     header is un-stuck here instead — it scrolls away normally, like
+     any other in-flow content, and nothing needs to track the toolbar
+     frame-by-frame. (Desktop keeps the sticky header — mouse/trackpad
+     scrolling never animates OS chrome, so it was never actually the
+     problem there.) The mobile nav dropdown doesn't depend on the header
+     being positioned — it grows the header's own height via CSS grid
+     rows — so this doesn't break the menu. */
   .site-header {
+    position: static;
     backdrop-filter: none;
     -webkit-backdrop-filter: none;
     background: color-mix(in srgb, color-mix(in srgb, var(--paper) 90%, black) 96%, transparent);
