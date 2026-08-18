@@ -1412,13 +1412,35 @@ body.viewer-open .custom-scrollbar-track { display: none !important; }
     border-radius: 0;
     border: none;
   }
-  .viewer-stage, .viewer-media--photo, .viewer-media--video {
-    max-height: 55vh;
-    max-height: 55dvh;
+  /* Stage now fills whatever room is left inside the panel after the
+     footer, instead of a fixed 55vh. The panel above already tracks the
+     *live* visible viewport via 100dvh, so as the address bar hides
+     (viewport grows) or reappears (viewport shrinks), the panel resizes
+     and the stage — having no height of its own — is recalculated by
+     flexbox on every layout pass to exactly fill the remainder. That
+     removes both failure modes of the old fixed-percentage approach:
+     a blank gap under the image when the bar hides, and the image/
+     footer getting clipped when the bar reappears. min-height:0 is
+     required here so flexbox is allowed to shrink the stage below its
+     content size on short viewports, rather than overflowing the panel. */
+  .viewer-stage {
+    flex: 1 1 auto;
+    min-height: 0;
+    max-height: none;
   }
+  .viewer-media--photo, .viewer-media--video {
+    max-height: 100%; /* fill the stage's actual (now dynamic) height */
+  }
+  .viewer-placeholder { min-height: 0; }
   .viewer-close { top: var(--space-3); right: var(--space-3); width: 36px; height: 36px; }
-  .viewer-prev { left: var(--space-2); top: 27.5vh; top: 27.5dvh; width: 34px; height: 34px; }
-  .viewer-next { right: var(--space-2); top: 27.5vh; top: 27.5dvh; width: 34px; height: 34px; }
+  /* top/transform intentionally not overridden here — they inherit the
+     base rule's top:50%/translateY(-50%), which centers on the full
+     popup height. The old fixed 27.5vh assumed the stage was always
+     exactly the top 55% of the screen; now that the stage's height is
+     dynamic (see .viewer-stage above), a fixed vh guess would drift out
+     of alignment as the footer wraps or the address bar toggles. */
+  .viewer-prev { left: var(--space-2); width: 34px; height: 34px; }
+  .viewer-next { right: var(--space-2); width: 34px; height: 34px; }
   .viewer-footer { flex-direction: column; align-items: stretch; }
 
   /* auto-hide: hidden by default, revealed by the "controls-visible"
