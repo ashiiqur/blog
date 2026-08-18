@@ -588,6 +588,58 @@ section.block + section.block { border-top: 1px solid var(--rule); }
   padding: .2em .6em;
 }
 
+/* ---------- download entry (PDF / Markdown) — injected by script.js
+   as a small row right after the article body (before .post-nav),
+   right-aligned to match the nav row underneath it. Each button shows
+   a file icon (what you're downloading) with a small download-arrow
+   badge on it (that you can download it) — see buildFileIcon() in
+   script.js. Its own class (not the smaller, plain .icon-btn used for
+   copy/share) since this composite icon needs more room to stay
+   legible. */
+.post-downloads {
+  display: flex;
+  justify-content: flex-end;
+  gap: var(--space-3);
+  margin: 0 0 var(--space-3);
+}
+.entry-download-item {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: .4em;
+}
+.entry-download-btn {
+  width: 36px;
+  height: 36px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: var(--ink-soft);
+  background: var(--paper);
+  border: 1px solid var(--rule);
+  border-radius: 50%;
+  cursor: pointer;
+  flex: none;
+  transition: color .2s ease, border-color .2s ease;
+}
+.entry-download-btn:hover, .entry-download-btn:focus-visible { color: var(--accent); border-color: var(--accent); }
+.entry-download-btn svg { width: 20px; height: 20px; }
+.entry-download-btn[data-busy="true"] { opacity: .55; pointer-events: none; }
+.entry-download-format {
+  font-family: var(--font-mono);
+  font-size: .68rem;
+  letter-spacing: .04em;
+  color: var(--ink-soft);
+}
+.entry-download-item:has(.entry-download-btn:hover),
+.entry-download-item:has(.entry-download-btn:focus-visible) {
+  color: var(--accent);
+}
+.entry-download-item:has(.entry-download-btn:hover) .entry-download-format,
+.entry-download-item:has(.entry-download-btn:focus-visible) .entry-download-format {
+  color: var(--accent);
+}
+
 .post-body {
   padding-bottom: var(--space-8);
   font-size: 1.08rem;
@@ -1520,4 +1572,40 @@ body.viewer-open .custom-scrollbar-track { display: none !important; }
   padding-left: 0 !important;
   padding-right: 0 !important;
   margin-right: 15px; /* Adjust this value to control the space before 'Writing' */
+}
+
+/* ---------- print (used by the post-page "Download PDF" button, which
+   just calls window.print() — this is what turns that into a clean,
+   article-only PDF via the browser's own "Save as PDF" destination).
+   Forces light-theme colours regardless of the visitor's data-theme so
+   a dark-mode reader doesn't burn ink/toner printing a near-black page,
+   and strips every bit of site chrome so only the article remains. ---------- */
+@media print {
+  :root, [data-theme="dark"] {
+    --paper: #ffffff;
+    --paper-alt: #ffffff;
+    --ink: #111111;
+    --ink-soft: #333333;
+    --ink-faint: #666666;
+    --accent: #2d4159;
+    --rule: #cccccc;
+  }
+  .progress-bar,
+  .site-header,
+  .site-footer,
+  .custom-scrollbar-track,
+  .post-nav,
+  .back-link,
+  .post-downloads,
+  .viewer { display: none !important; }
+
+  body { background: #fff; font-size: 12pt; }
+  main, .container, article { max-width: none !important; margin: 0 !important; padding: 0 !important; }
+  .post-head { padding: 0 0 var(--space-5); }
+  .post-body { padding-bottom: 0; }
+  .post-title { font-size: 24pt; }
+  .post-body img { max-width: 100%; break-inside: avoid; }
+  .post-body h3, .post-title, .post-dek { break-after: avoid; }
+  .post-body blockquote, .post-body p, .post-body figure { break-inside: avoid; }
+  a[href]::after { content: ""; } /* keep link text clean, no printed URLs */
 }
