@@ -1,6 +1,6 @@
 /**
  * generate-og-images.js
- 
+ *
  * Renders og-preview.html once per link/page and saves each result as a
  * static 1200x630 PNG. Real social crawlers (Facebook, X, Discord, Slack,
  * iMessage, LinkedIn...) fetch whatever URL is in <meta property="og:image">
@@ -35,10 +35,10 @@ const TARGETS = [
   { file: "contact", page: "contact" },
   { file: "404", page: "404" },
 
-  // individual posts - one entry per folder inside blog/
-  { file: "blog-a-note-on-books", eyebrow: "WRITING", title: "A Note on Books", desc: "TODO: one-line summary of this post.", link: "blog.ashiqur.in/blog/a-note-on-books" },
-  { file: "blog-finding-focus-through-sound", eyebrow: "WRITING", title: "Finding Focus Through Sound", desc: "TODO: one-line summary of this post.", link: "blog.ashiqur.in/blog/finding-focus-through-sound" },
-  { file: "blog-on-the-discipline-of-doing-less", eyebrow: "WRITING", title: "On the Discipline of Doing Less", desc: "TODO: one-line summary of this post.", link: "blog.ashiqur.in/blog/on-the-discipline-of-doing-less" },
+  // individual posts - one entry per folder inside blog/O
+  { file: "blog-a-note-on-books", eyebrow: "WRITING", title: "A Note on Books", desc: "A Note on something called book.", link: "blog.ashiqur.in/blog/a-note-on-books" },
+  { file: "blog-finding-focus-through-sound", eyebrow: "WRITING", title: "Finding Focus Through Sound", desc: "Making a sound Nostalgic.", link: "blog.ashiqur.in/blog/finding-focus-through-sound" },
+  { file: "blog-on-the-discipline-of-doing-less", eyebrow: "WRITING", title: "On the Discipline of Doing Less", desc: "Doing less doesn't mean doing nothing.", link: "blog.ashiqur.in/blog/on-the-discipline-of-doing-less" },
 
   // two more folders were visible in your screenshot but covered/illegible -
   // send me those slugs and I'll add matching entries the same way.
