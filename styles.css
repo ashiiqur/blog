@@ -41,17 +41,6 @@
 * { box-sizing: border-box; }
 html { scroll-behavior: smooth; }
 
-/* NOTE: this used to hold `body.contain-bounce { overscroll-behavior-y:
-   contain; }`, toggled on/off by script.js based on scroll position, to
-   stop the bottom rubber-band bounce from chaining into the mobile
-   browser's own toolbar hide/show handling. Removed: changing
-   overscroll-behavior on <body> mid-gesture desyncs the browser's native
-   toolbar/pull-to-refresh state machine — that's what left the toolbar
-   stuck mid-animation (on load, near the top, and after a moderate
-   bottom overscroll), only clearing after a hard fling forced a resync.
-   Left at the default (auto) on both edges instead, which is what the
-   vast majority of sites do and matches native scroll/toolbar behaviour. */
-
 @media (prefers-reduced-motion: reduce) {
   html { scroll-behavior: auto; }
   *, *::before, *::after {
@@ -181,30 +170,6 @@ button {
   background: color-mix(in srgb, color-mix(in srgb, var(--paper) 90%, black) 88%, transparent);
   backdrop-filter: blur(8px);
   border-bottom: 1px solid var(--rule);
-}
-@media (pointer: coarse) {
-  /* Dropping the blur alone (see below) wasn't enough — the real trigger
-     is `position: sticky` itself. A sticky element pinned to the top
-     edge has to be repositioned by the browser on every single frame of
-     its own dynamic-toolbar animation (collapsing on scroll-down,
-     expanding on scroll-up or at the bottom rubber-band). That per-frame
-     recompute is what falls out of sync and leaves the toolbar visually
-     torn/frozen at the scroll extremes until a hard scroll forces a
-     resync. There's no way to keep an element pinned to the viewport
-     edge on a touch device without tying it to that animation, so the
-     header is un-stuck here instead — it scrolls away normally, like
-     any other in-flow content, and nothing needs to track the toolbar
-     frame-by-frame. (Desktop keeps the sticky header — mouse/trackpad
-     scrolling never animates OS chrome, so it was never actually the
-     problem there.) The mobile nav dropdown doesn't depend on the header
-     being positioned — it grows the header's own height via CSS grid
-     rows — so this doesn't break the menu. */
-  .site-header {
-    position: static;
-    backdrop-filter: none;
-    -webkit-backdrop-filter: none;
-    background: color-mix(in srgb, color-mix(in srgb, var(--paper) 90%, black) 96%, transparent);
-  }
 }
 .header-inner {
   max-width: var(--wide);
