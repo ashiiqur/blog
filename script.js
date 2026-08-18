@@ -367,8 +367,8 @@ if (window.matchMedia('(pointer: fine)').matches) {
 
 /* ---------- shared lazy background-image loader ----------
    Used for both the Posts grid tiles and the Works thumbnails below.
-   Nothing is fetched until an element is actually inside the visible
-   viewport (or, if it starts out inside a hidden tab panel, until
+   By default nothing is fetched until an element is actually inside the
+   visible viewport (or, if it starts out inside a hidden tab panel, until
    switching to that tab brings it into view) — IntersectionObserver
    watches every element up front, but each file is only requested once
    it's genuinely on screen, so a long grid doesn't fire off dozens of
@@ -382,11 +382,16 @@ if (window.matchMedia('(pointer: fine)').matches) {
    approach as the pixel portrait and special circles elsewhere on the
    page: try loading the file, and only touch the DOM once it's
    confirmed to exist; a missing file (or an empty/absent data-img)
-   leaves whatever placeholder already renders in place, untouched. */
+   leaves whatever placeholder already renders in place, untouched.
+
+   Callers that pass options.immediate skip the IntersectionObserver
+   entirely and request every element's file right away — same probe,
+   same fallback behaviour, just none of the scroll-triggered staging. */
 function lazyLoadBackgrounds(elements, options) {
   options = options || {};
   var getTarget = options.getTarget || function (el) { return el; };
   var onLoaded = options.onLoaded;
+  var immediate = options.immediate;
   elements = Array.prototype.slice.call(elements);
   if (!elements.length) return;
 
@@ -405,8 +410,9 @@ function lazyLoadBackgrounds(elements, options) {
     probe.src = src;
   }
 
-  if (!("IntersectionObserver" in window)) {
-    /* no observer support — just load everything up front */
+  if (immediate || !("IntersectionObserver" in window)) {
+    /* immediate load requested, or no observer support — either way,
+       just load everything up front */
     elements.forEach(loadOne);
     return;
   }
@@ -425,8 +431,12 @@ function lazyLoadBackgrounds(elements, options) {
   elements.forEach(function (el) { observer.observe(el); });
 }
 
-/* post tiles (Posts tab) — preview images. Applies to all three tile
-   types — photo, video and file — the only difference is which
+/* post tiles (Posts tab) — preview images. Loaded immediately (not
+   staged in as tiles scroll into view) since pagination above already
+   caps how many tiles can be on screen for a given page, so there's no
+   long-grid case left for scroll-triggered staging to protect against.
+   Still the same probe-first pattern otherwise — applies to all three
+   tile types — photo, video and file — the only difference is which
    placeholder svg stays put when there's nothing to load:
      - Photo tiles (also used for gif tiles — same grid markup and
        .post-media--photo class, so a GIF grid thumbnail probes and
@@ -445,6 +455,7 @@ function lazyLoadBackgrounds(elements, options) {
   "use strict";
   var tiles = document.querySelectorAll(".post-tile[data-img]");
   lazyLoadBackgrounds(tiles, {
+    immediate: true,
     getTarget: function (tile) { return tile.querySelector(".post-media"); },
     onLoaded: function (media) {
       if (media.classList.contains("post-media--photo")) {
@@ -456,15 +467,403 @@ function lazyLoadBackgrounds(elements, options) {
   });
 })();
 
-/* Works list — thumbnail images. Same lazy, probe-first pattern: found →
-   set as the background and fade out the placeholder icon (.has-photo).
+/* Works list — thumbnail images. Same probe-first pattern as Posts above,
+   loaded immediately for the same reason: pagination already caps how
+   many can be on screen for a given page, so there's no long-grid case
+   left for scroll-triggered staging to protect against. Found → set as
+   the background and fade out the placeholder icon (.has-photo).
    Missing (or no data-img on the card yet) → placeholder icon stays. */
 (function () {
   "use strict";
   var thumbs = document.querySelectorAll(".work-thumb[data-img]");
   lazyLoadBackgrounds(thumbs, {
+    immediate: true,
     onLoaded: function (thumb) { thumb.classList.add("has-photo"); }
   });
+})();
+
+/* ---------- pagination (Entries / Posts / Works) ----------
+   Once a listing grows past PAGE_SIZE items, this slices it into pages
+   and renders Previous / numbered / Next controls below it, styled to
+   match the current theme. Below PAGE_SIZE items, nothing is built and
+   nothing changes — today's Entries (3), Posts (13) and Works (4)
+   render exactly as before.
+
+   Items on a page that hasn't been opened yet are simply left
+   display:none, same as items inside a still-hidden tab panel. Neither
+   that nor scrolling matters for image loading any more, though —
+   Posts and Works tiles alike now load immediately (see both blocks
+   above) rather than staging in as they're revealed.
+
+   Exposes container.__pagination so the per-tab search boxes further
+   down this file can hand control back and forth: while a search is
+   active, paging is suspended and every match is shown at once across
+   all pages; clearing the box restores the current page. */
+(function () {
+  "use strict";
+  var PAGE_SIZE = 20;
+  var WINDOW = 5; // numbered buttons shown before collapsing into "…"
+
+  /* Scrolls back to the top of a section (just under the sticky header,
+     plus a small breathing-room gap — GAP matches the --space-3 token
+     used for this same gap elsewhere in the CSS), eased with
+     easeInUniformOut below: speed ramps up from zero, cruises at a
+     constant speed through the middle of the trip, then ramps back down
+     to zero on arrival, instead of cutting the motion off abruptly or
+     running at one flat speed the whole way. Skipped for
+     prefers-reduced-motion: jumps straight there instead.
+
+     html has `scroll-behavior: smooth` globally (styles.css). Left alone,
+     every window.scrollTo() call below would be intercepted by the browser
+     and turned into its own native smooth-scroll animation toward that
+     frame's target — the same conflict already solved for the custom-
+     scrollbar drag above (see setProperty/removeProperty('scroll-behavior')
+     there). Apply the same fix here: force `auto` for the duration of the
+     animation, restore it when done.
+
+     START_DELAY holds the first frame of motion back for a beat after the
+     click instead of yanking the page the instant the button is pressed —
+     the nav button states (renderNav, inside showPage) still update
+     immediately, only the scroll itself waits. scrollAnimId guards both
+     that waiting period and the animation against a second page click
+     landing before the first has finished: the superseded call quietly
+     stops instead of fighting the new one for the scroll position.
+
+     onComplete fires once the scroll has actually landed (or right away,
+     for the reduced-motion / already-there / no-target cases). goToPage
+     below hands it applyVisiblePage, so the grid's items only get
+     swapped to the new page once the section is sitting still at the
+     top — see the comment on showPage/applyVisiblePage for why that
+     ordering, not this animation, is what actually removes the jump
+     between pages with different item counts. */
+  var scrollAnimId = 0;
+
+  /* Trapezoidal speed profile: ease in for the first EASE fraction of the
+     trip's *time*, cruise at a constant speed through the middle, ease
+     out for the last EASE fraction. Both ramps use a constant-
+     acceleration curve (position ∝ time²), so speed is continuous where
+     the phases meet — accelerate, cruise, decelerate, with no snap
+     between them. EASE = 0.25 spends the first/last quarter of the trip
+     ramping and leaves the middle half at full cruising speed; raise it
+     for a longer, gentler ease, lower it for something snappier. */
+  var EASE = 0.25;
+  function easeInUniformOut(t) {
+    var a = EASE, d = EASE, c = 1 - a - d;
+    var vMax = 1 / (c + (a + d) / 2); // area under the speed curve totals 1 at t=1
+    if (t <= a) {
+      return 0.5 * (vMax / a) * t * t;
+    }
+    var posAtA = 0.5 * vMax * a;
+    if (t <= a + c) {
+      return posAtA + vMax * (t - a);
+    }
+    var posAtAC = posAtA + vMax * c;
+    var td = t - a - c; // elapsed time into the deceleration phase
+    return posAtAC + vMax * td - 0.5 * (vMax / d) * td * td;
+  }
+
+  function scrollToSectionTop(target, onComplete) {
+    if (!target) { if (onComplete) onComplete(); return; }
+
+    var myId = ++scrollAnimId; // supersedes anything still pending/animating from a prior click
+    var reduced = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+
+    function begin() {
+      if (myId !== scrollAnimId) return; // a newer click pre-empted this one before it started
+
+      var GAP = 12; // px, matches --space-3
+      var header = document.querySelector(".site-header");
+      var headerHeight = header ? header.offsetHeight : 0;
+      var destY = Math.max(target.getBoundingClientRect().top + window.pageYOffset - headerHeight - GAP, 0);
+      var startY = window.pageYOffset;
+      var distance = destY - startY;
+      if (Math.abs(distance) < 1) { if (onComplete) onComplete(); return; }
+
+      if (reduced) {
+        window.scrollTo(0, destY);
+        if (onComplete) onComplete();
+        return;
+      }
+
+      var root = document.documentElement;
+      root.style.setProperty('scroll-behavior', 'auto', 'important');
+
+      var SPEED = 1600; // px/sec — sets the pace; the ease-in/out ramps add a little on top of this
+      var duration = (Math.abs(distance) / SPEED) * 1000;
+      var startTime = null;
+
+      function step(timestamp) {
+        if (myId !== scrollAnimId) return; // a newer page click took over — its own onComplete runs instead
+        if (startTime === null) startTime = timestamp;
+        var t = Math.min((timestamp - startTime) / duration, 1);
+        window.scrollTo(0, startY + distance * easeInUniformOut(t));
+        if (t < 1) {
+          requestAnimationFrame(step);
+        } else {
+          root.style.removeProperty('scroll-behavior');
+          if (onComplete) onComplete();
+        }
+      }
+      requestAnimationFrame(step);
+    }
+
+    if (reduced) {
+      begin(); // reduced motion wants the jump right away, not a delayed one
+    } else {
+      var START_DELAY = 150; // ms - the pause before the scroll starts moving; raise/lower to taste
+      setTimeout(begin, START_DELAY);
+    }
+  }
+
+  /* Runs `mutate` (the swap that shows/hides items for the new page) and,
+     if that swap changed the container's height, animates the container
+     from its old height to its new one instead of letting it snap there
+     in one frame. Without this, a page with a different item count (e.g.
+     going from a full 20-item page to a shorter last page, or back)
+     changes the grid's height the instant the items toggle, and
+     everything below the container - the rest of that column, the
+     footer, the custom scrollbar thumb - jumps to its new position
+     rather than sliding there.
+
+     Built on the Web Animations API rather than the more common manual
+     approach (set height to the start value, force a reflow, flip it to
+     the end value on the next frame, let a CSS transition interpolate).
+     That approach depends on the browser noticing the flip across a
+     forced-reflow/next-frame boundary, which is where the occasional
+     stutter or skipped-frame snap was coming from. Handing both
+     keyframes to container.animate() up front avoids that dependency
+     entirely - the compositor owns the interpolation from the start.
+
+     startHeight is read before anything else, including before
+     cancelling any animation already in flight - so if a page button is
+     tapped again while the box is still mid-resize, the new animation
+     picks up from wherever the box visually is that instant rather than
+     snapping back to the previous target first. container.__heightAnim
+     tracks whichever call is currently "live" so an outdated animation's
+     cleanup can't stomp on a newer one. Skipped for
+     prefers-reduced-motion, same as the scroll animation above. */
+  function animateHeightChange(container, mutate) {
+    var startHeight = container.getBoundingClientRect().height; // wherever the box visually is right now, mid-animation or settled
+    if (container.__heightAnim) container.__heightAnim.cancel();
+
+    var reduced = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+    mutate();
+
+    if (reduced || typeof container.animate !== "function") return;
+
+    var endHeight = container.getBoundingClientRect().height;
+    if (Math.abs(endHeight - startHeight) < 1) return; // nothing to animate
+
+    /* A fixed-height .ledger (overflow-y: auto in styles.css — used
+       elsewhere on the site, though the Entries tab's own .ledger is
+       scoped back out of it, see #panel-entries .ledger in styles.css)
+       already clips/scrolls its own overflow, so mid-animation it just
+       shows a scrollbar over whatever hasn't grown into view yet - no
+       override needed there, and toggling one off/on would risk its own
+       scrollbar-gutter flicker. The Entries/Posts/Works containers all
+       have overflow-y: visible, so without a temporary clip, newly-
+       revealed items would sit fully visible below the box's still-
+       growing edge instead of being concealed until the box reaches
+       them. */
+    var clip = getComputedStyle(container).overflowY === "visible";
+    var prevOverflow = container.style.overflow;
+    if (clip) container.style.overflow = "hidden";
+
+    var anim = container.animate(
+      [{ height: startHeight + "px" }, { height: endHeight + "px" }],
+      { duration: 350, easing: "ease" }
+    );
+    container.__heightAnim = anim;
+
+    anim.onfinish = anim.oncancel = function () {
+      if (container.__heightAnim !== anim) return; // a newer swap already took over
+      container.__heightAnim = null;
+      if (clip) container.style.overflow = prevOverflow;
+    };
+  }
+
+  function setupPagination(container, items, label, storageKey) {
+    if (!container) return null;
+    if (items.length <= PAGE_SIZE) {
+      /* No real pagination needed here. The pre-paint head script guesses
+         at hiding items before this file even loads, based on whatever
+         page number localStorage last had — if that guess is now stale
+         (e.g. the list shrank back to one page), nothing below would ever
+         clear it, since showPage() (which normally does that) is never
+         reached on this path. Clear it explicitly so nothing is left
+         permanently hidden. */
+      items.forEach(function (item) { item.style.display = ""; });
+      return null;
+    }
+
+    /* Where a page-change scroll (see scrollToSectionTop below) lands:
+       the heading + search bar sitting just above this container inside
+       its tab panel — e.g. "Posts" and its search box, not the grid's
+       first tile. Falls back to the panel itself, then the container,
+       if that markup isn't there. */
+    var panel = container.closest(".tab-panel");
+    var scrollTarget = (panel && panel.querySelector(".section-head")) || panel || container;
+
+    var pageCount = Math.ceil(items.length / PAGE_SIZE);
+    var currentPage = 1;
+    /* restore whichever page was last open, same as the Entries/Posts/Works
+       tabs remembering their last-selected tab via localStorage */
+    if (storageKey) {
+      var stored = 0;
+      try { stored = parseInt(localStorage.getItem(storageKey), 10); } catch (e) {}
+      if (stored >= 1 && stored <= pageCount) { currentPage = stored; }
+    }
+    var searching = false;
+
+    var nav = document.createElement("nav");
+    nav.className = "pagination";
+    nav.setAttribute("aria-label", label || "Pagination");
+    container.insertAdjacentElement("afterend", nav);
+
+    function pageItems(page) {
+      var start = (page - 1) * PAGE_SIZE;
+      return items.slice(start, start + PAGE_SIZE);
+    }
+
+    function pageRange() {
+      var pages = [];
+      if (pageCount <= WINDOW + 1) {
+        for (var i = 1; i <= pageCount; i++) pages.push(i);
+        return pages;
+      }
+      if (currentPage <= WINDOW) {
+        for (var i = 1; i <= WINDOW; i++) pages.push(i);
+        pages.push("…");
+        pages.push(pageCount);
+      } else if (currentPage >= pageCount - 2) {
+        pages.push(1);
+        pages.push("…");
+        for (var i = pageCount - WINDOW + 1; i <= pageCount; i++) pages.push(i);
+      } else {
+        pages.push(1);
+        pages.push("…");
+        pages.push(currentPage - 1, currentPage, currentPage + 1);
+        pages.push("…");
+        pages.push(pageCount);
+      }
+      return pages;
+    }
+
+    function renderNav() {
+      nav.innerHTML = "";
+
+      var prev = document.createElement("button");
+      prev.type = "button";
+      prev.className = "page-btn page-btn--prev";
+      prev.textContent = "Previous";
+      prev.disabled = currentPage === 1;
+      prev.addEventListener("click", function () { goToPage(currentPage - 1); });
+      nav.appendChild(prev);
+
+      pageRange().forEach(function (p) {
+        if (p === "…") {
+          var span = document.createElement("span");
+          span.className = "page-ellipsis";
+          span.textContent = "…";
+          nav.appendChild(span);
+          return;
+        }
+        var btn = document.createElement("button");
+        btn.type = "button";
+        btn.className = "page-btn" + (p === currentPage ? " active" : "");
+        btn.textContent = String(p);
+        if (p === currentPage) btn.setAttribute("aria-current", "page");
+        btn.addEventListener("click", function () { goToPage(p); });
+        nav.appendChild(btn);
+      });
+
+      var next = document.createElement("button");
+      next.type = "button";
+      next.className = "page-btn page-btn--next";
+      next.textContent = "Next";
+      next.disabled = currentPage === pageCount;
+      next.addEventListener("click", function () { goToPage(currentPage + 1); });
+      nav.appendChild(next);
+    }
+
+    /* Split in two on purpose. Previously a single showPage() both
+       flipped currentPage *and* toggled every item's display — all
+       synchronously, the instant a page button was clicked, before the
+       scroll animation (which only starts after START_DELAY) had even
+       begun. A page with a different item count changes the grid's
+       height the moment it's toggled, and if that change lands while
+       the browser still owns the scroll position — or pushes the
+       current scrollY past the new max — the browser snaps the page to
+       fit right there, with no animation. That's the jump: click →
+       instant snap → (a beat later) the smooth scroll starts from
+       wherever the snap left off, instead of from where the click
+       happened.
+
+       Now showPage() only updates currentPage, the nav buttons and
+       localStorage — safe to run immediately, since none of that
+       affects the grid's height. applyVisiblePage() is the part that
+       actually shows/hides items and changes the height; goToPage()
+       hands it to scrollToSectionTop as onComplete, so it only runs once
+       the page has actually finished scrolling to the top. Whatever page
+       was on screen at click time stays on screen, unchanged, for the
+       entire trip — so the animation always starts exactly from where
+       the click happened, and the content swap happens only once
+       there's no more scrolling left to do. */
+    function showPage(page) {
+      currentPage = Math.min(Math.max(page, 1), pageCount);
+      renderNav();
+      if (storageKey) {
+        try { localStorage.setItem(storageKey, String(currentPage)); } catch (e) {}
+      }
+    }
+
+    function applyVisiblePage() {
+      animateHeightChange(container, function () {
+        var visible = pageItems(currentPage);
+        items.forEach(function (item) {
+          item.style.display = visible.indexOf(item) !== -1 ? "" : "none";
+        });
+      });
+    }
+
+    function goToPage(page) {
+      showPage(page);
+      scrollToSectionTop(scrollTarget, applyVisiblePage);
+    }
+
+    showPage(currentPage);
+    applyVisiblePage();
+
+    return {
+      setSearching: function (isSearching) {
+        if (isSearching === searching) return;
+        searching = isSearching;
+        nav.style.display = isSearching ? "none" : "";
+        if (!isSearching) applyVisiblePage();
+      }
+    };
+  }
+
+  [
+    { selector: ".ledger", itemSelector: ".entry", label: "Entries pages", storageKey: "entriesPage" },
+    { selector: ".posts-grid", itemSelector: ".post-tile", label: "Posts pages", storageKey: "postsPage" },
+    { selector: ".works-list", itemSelector: ".work-card", label: "Works pages", storageKey: "worksPage" }
+  ].forEach(function (cfg) {
+    var container = document.querySelector(cfg.selector);
+    if (!container) return;
+    var items = Array.prototype.slice.call(container.children).filter(function (el) {
+      return el.matches(cfg.itemSelector);
+    });
+    var api = setupPagination(container, items, cfg.label, cfg.storageKey);
+    if (api) container.__pagination = api;
+  });
+
+  /* Every item that the pre-paint head script might have hidden now has
+     an explicit inline style of its own (set above, either by showPage()
+     or by the early-return cleanup), which always wins over it — so the
+     stylesheet it injected has nothing left to do. Remove it. */
+  var preload = document.querySelector("style[data-pagination-preload]");
+  if (preload) { preload.remove(); }
 })();
 
 
@@ -821,13 +1220,43 @@ function lazyLoadBackgrounds(elements, options) {
     if (type === "photo" || type === "gif") {
       var fullSrc = src || img;
       if (fullSrc) {
+        /* Keep the placeholder on screen and only reveal the full-size
+           photo once it's completely ready — same probe-first,
+           reveal-once-loaded pattern already used for the grid thumbnails
+           elsewhere on this page, applied here individually to whichever
+           photo is currently open. Two refinements over a plain onload:
+             - decode() (where supported) resolves only once the browser
+               has actually finished decoding the image off the main
+               thread, so the reveal below paints instantly with no
+               first-frame stutter — onload alone can fire slightly before
+               that decoding work is done.
+             - the image fades in (opacity, via CSS) rather than popping
+               in the instant it's appended. */
+        stage.innerHTML = placeholderMarkup(type, tagText, img);
+
         var photoEl = document.createElement("img");
         photoEl.className = "viewer-media viewer-media--photo";
         photoEl.alt = titleText;
         photoEl.draggable = false;
-        photoEl.src = fullSrc;
-        photoEl.onerror = function () { stage.innerHTML = placeholderMarkup(type, tagText); };
-        stage.appendChild(photoEl);
+        photoEl.style.opacity = "0";
+
+        var revealPhoto = function () {
+          stage.innerHTML = "";
+          stage.appendChild(photoEl);
+          requestAnimationFrame(function () {
+            requestAnimationFrame(function () { photoEl.style.opacity = "1"; });
+          });
+        };
+        var showPhotoFailure = function () { stage.innerHTML = placeholderMarkup(type, tagText); };
+
+        if (photoEl.decode) {
+          photoEl.src = fullSrc;
+          photoEl.decode().then(revealPhoto).catch(showPhotoFailure);
+        } else {
+          photoEl.onload = revealPhoto;
+          photoEl.onerror = showPhotoFailure;
+          photoEl.src = fullSrc;
+        }
 
         /* ---- pan & zoom ----
            The Zoom in/out buttons (and the scroll wheel) step the scale
