@@ -32,6 +32,17 @@
   var yearEl = document.getElementById("year");
   if (yearEl) yearEl.textContent = new Date().getFullYear();
 
+  /* NOTE: previously toggled a `.contain-bounce` class (see styles.css)
+     on/off based on scroll position, to stop the bottom rubber-band
+     bounce from chaining into the mobile browser's own toolbar hide/show
+     handling. Removed: flipping overscroll-behavior on <body> mid-gesture
+     — which is what happens the instant scroll position crosses the top
+     boundary while a touch/momentum scroll is still active — desyncs the
+     browser's native toolbar/pull-to-refresh state machine. That's what
+     left the toolbar stuck mid-animation on both edges, only resolved by
+     a hard fling that forces the browser to resync. Left at the default
+     (auto) overscroll behaviour on both edges instead — see styles.css. */
+
   /* scroll fade-up */
   var reduceMotion = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
   var items = document.querySelectorAll(".fade-up");
