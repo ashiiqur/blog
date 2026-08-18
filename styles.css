@@ -421,6 +421,34 @@ section.block + section.block { border-top: 1px solid var(--rule); }
 @media (max-width: 560px) {
   .ledger { max-height: 340px; }
 }
+
+/* Entries tab: opt this particular .ledger back out of the fixed-height
+   scroll box above so it grows with the page instead, same as .posts-grid
+   and .works-list — a page-count-changing pagination click here should
+   scroll the whole page to the section top and reveal the new page's
+   first entry right away, not leave it sitting below whatever scrollTop
+   the box's own internal scrollbar happened to be at.
+   Scoped to #panel-entries specifically (rather than changed on the base
+   .ledger rule above) so any other fixed-height ledger elsewhere on the
+   site keeps its own internal scroll untouched — this override only
+   grows the one inside the Entries tab.
+   Nothing else needs to change to make that happen:
+     - script.js's animateHeightChange (the height-transition used by
+       every paginated list) already decides whether to clip a container
+       mid-animation by reading its *computed* overflow-y rather than
+       assuming per element, so once this is "visible" it gets the exact
+       same treatment Posts/Works already get.
+     - the ledger wheel-scroll-handoff listener in script.js checks
+       scrollHeight > clientHeight before doing anything; with no
+       max-height to overflow, that's never true here any more, so the
+       listener quietly no-ops on this element instead of needing to be
+       removed. */
+#panel-entries .ledger {
+  max-height: none;
+  overflow-y: visible;
+  padding-right: 0;
+}
+
 .entry {
   display: grid;
   grid-template-columns: 108px 1fr auto;
@@ -853,6 +881,54 @@ html[data-initial-tab="tab-works"] #panel-entries { display: none; }
 html[data-initial-tab="tab-posts"] #panel-posts { display: block; }
 html[data-initial-tab="tab-works"] #panel-works { display: block; }
 
+/* ---------- pagination controls ----------
+   Built by script.js, one instance per listing (Posts / Works). Stays
+   completely absent unless that listing actually grows past the page
+   size — a short list renders exactly as before. */
+.pagination {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-wrap: wrap;
+  gap: 2px;
+  width: fit-content;
+  margin: var(--space-6) auto 0;
+  padding: 3px;
+  background: var(--paper);
+  border: 1px solid var(--rule);
+  border-radius: calc(var(--radius) + 4px);
+  box-shadow: 0 1px 3px color-mix(in srgb, var(--ink) 12%, transparent);
+}
+.page-btn {
+  font-family: var(--font-mono);
+  font-size: .78rem;
+  letter-spacing: .02em;
+  color: var(--ink-soft);
+  background: transparent;
+  border: 1px solid transparent;
+  border-radius: var(--radius);
+  min-width: 2.1em;
+  padding: .5em .75em;
+  line-height: 1;
+  transition: background .2s ease, color .2s ease, border-color .2s ease;
+}
+.page-btn--prev, .page-btn--next { padding: .5em .9em; }
+.page-btn:hover:not(:disabled):not(.active) { color: var(--ink); border-color: var(--rule); }
+.page-btn.active { background: var(--accent); color: var(--paper); }
+.page-btn:disabled { color: var(--ink-faint); cursor: default; opacity: .5; }
+.page-ellipsis {
+  font-family: var(--font-mono);
+  font-size: .78rem;
+  color: var(--ink-faint);
+  padding: .5em .4em;
+  user-select: none;
+}
+@media (max-width: 560px) {
+  .pagination { gap: 1px; }
+  .page-btn { padding: .45em .6em; font-size: .72rem; }
+  .page-btn--prev, .page-btn--next { padding: .45em .7em; }
+}
+
 /* ---------- post grid (photos / videos / files) ---------- */
 .posts-grid {
   display: grid;
@@ -1276,7 +1352,8 @@ html[data-initial-tab="tab-works"] #panel-works { display: block; }
   max-height: 68dvh;
   object-fit: contain;
   cursor: zoom-in;
-  transition: transform .2s ease;
+  opacity: 1;
+  transition: transform .2s ease, opacity .25s ease;
   touch-action: none; /* let JS own drag/wheel gestures instead of the browser */
   user-select: none;
   -webkit-user-drag: none;
@@ -1436,6 +1513,7 @@ body.viewer-open .custom-scrollbar-track { display: none !important; }
     pointer-events: auto;
   }
 }
+
 
 
 .home-link {
