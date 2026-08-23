@@ -43,7 +43,7 @@
 
 Building things, writing about them, one notebook page at a time.
 
-🌐 [blog.ashiqur.in](https://blog.ashiqur.in) &nbsp;•&nbsp;
+[blog.ashiqur.in](https://blog.ashiqur.in) &nbsp;•&nbsp;
 [GitHub](https://github.com/ashiiqur) &nbsp;•&nbsp;
 [YouTube](https://www.youtube.com/@ashiqur_sf) &nbsp;•&nbsp;
 [X](https://twitter.com/ashiqur_sf) &nbsp;•&nbsp;
