@@ -19,7 +19,7 @@
 
 </div>
 
-Personal blog by **Ashiqur Rahman** — notes and write-ups, styled like a handwritten notebook.
+<p align="center">Personal blog by <strong>Ashiqur Rahman</strong> — notes and write-ups, styled like a handwritten notebook.</p>
 
 ---
 
