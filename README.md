@@ -19,7 +19,7 @@
 
 </div>
 
-<p align="center">Personal blog by <strong>Ashiqur Rahman</strong> — notes and write-ups, styled like a handwritten notebook.</p>
+<p align="center">Personal blog by <strong>Ashiqur Rahman</strong>  notes and write-ups, styled like a handwritten notebook.</p>
 
 ---
 
@@ -56,7 +56,7 @@ Building things, writing about them, one notebook page at a time.
 
 ## About
 
-This repository powers [blog.ashiqur.in](https://blog.ashiqur.in) — my personal blog for posts, notes, and experiments.
+This repository powers [blog.ashiqur.in](https://blog.ashiqur.in)  my personal blog for posts, notes, and experiments.
 
 ## License
 
