@@ -2,7 +2,21 @@
 
 <table border="0">
 <tr>
-<td><img src="assets/README/ashiqur-avatar-pixel.svg" width="96" height="96" alt="Pixel portrait of Ashiqur Rahman" /></td>
+<td align="center">
+<pre>
+....                  .... 
+#%#*  .:::.     .:    +#%%.
+%%. -#%@@@#    .%@*     #@.
+#% :@@@@@@#    *%#@=    #@.
+#% -@@@@@@#   +@= #%:   #@.
+#%. +%@@@@#  -@#..-@#   #@.
+#%.  .-=+@# .%%####%@*  #@.
+#%.     .@# #@-     *@= #@.
+%%.      *+:#=       ** #@.
+#%#*                  +#%%.
+..:.                  .:.. 
+</pre>
+</td>
 <td align="left">
 
 # blog.ashiqur.in
